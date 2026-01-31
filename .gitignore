@@ -1,0 +1,15 @@
+.idea/
+
+__pycache__/
+*.pyc
+
+myenv-django/
+venv/
+.env/
+
+db.sqlite3
+media/
+staticfiles/
+
+.DS_Store
+Thumbs.db
