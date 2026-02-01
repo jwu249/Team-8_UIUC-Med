@@ -7,8 +7,8 @@ class MedService(models.Model):
     """
     name = models.CharField(max_length=200)
     location = models.CharField(max_length=200)
-    email = models.EmailField(max_length=200)
-    number = models.CharField(max_length=200) # has to be char because we have dashes (-) but not sure maybe? idk
+    email = models.EmailField(max_length=200, blank=True, null=True)
+    number = models.CharField(max_length=200, blank=True, null=True) # has to be char because we have dashes (-) but not sure maybe? idk
     appointments_required = models.BooleanField(default=True) # defaulted to true if we do not know
 
     class Meta: # default ordering by name
