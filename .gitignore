@@ -13,3 +13,10 @@ staticfiles/
 
 .DS_Store
 Thumbs.db
+
+# secrets
+.env
+.env.*
+
+*.sqlite3
+db.sqlite3
