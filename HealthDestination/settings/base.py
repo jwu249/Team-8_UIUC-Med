@@ -14,7 +14,7 @@ from pathlib import Path
 from HealthDestination.secrets_environment import env # import env file from secrets_environment.py
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent # added an extra parent to view templates
 
 
 # Quick-start development settings - unsuitable for production
