@@ -8,7 +8,8 @@
         <li>
             <strong>{{ service.name }}</strong><br>
             Location: {{ service.location }}<br>
-            Phone: {{ service.number }}
+            Phone: {{ service.number }}<br>
+            Appointments Required: {{ service.appointments_required|yesno:"Yes,No" }}
         </li>
         <br>
 
