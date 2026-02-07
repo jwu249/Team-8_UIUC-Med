@@ -1,0 +1,65 @@
+// this is where we map out and describe how our branch is structured //
+
+│   .gitignore
+│   manage.py
+│   README.md
+│
+├───.idea
+│   │   vcs.xml
+│   │   workspace.xml
+│   │
+│   └───inspectionProfiles
+│           profiles_settings.xml
+│
+├───docs
+│   ├───assignment submissions
+│   │       Group 8 UIUC Med - A1.4_ Data Modeling & Admin Kickoff Documentation.pdf
+│   │       Group 8 UIUC Med_ Project Idea Description.pdf
+│   │       INFO 490 Group 8 - UIUC Med ERD.pdf
+│   │
+│   ├───branching strategy
+│   │       branch.txt
+│   │
+│   ├───Notes
+│   │       info490 - base cbv .png
+│   │       info490 - generic cbv.png
+│   │       INFO490_manual.png
+│   │       INFO490_render.png
+│   │       notes.txt
+│   │
+│   └───wireframes
+│           G8 UIUC Med - 1.3B_Wireframes.pdf
+│
+├───HealthDestination
+│   │   asgi.py
+│   │   secrets_environment.py
+│   │   urls.py
+│   │   wsgi.py
+│   │   __init__.py
+│   │
+│   └───settings
+│           base.py
+│           development.py
+│           production.py
+│           __init__.py
+│
+├───HealthMap
+│   │   admin.py
+│   │   apps.py
+│   │   models.py
+│   │   tests.py
+│   │   urls.py
+│   │   views.py
+│   │   __init__.py
+│   │
+│   └───migrations
+│           0001_initial.py
+│           0002_alter_medservice_email_alter_medservice_number.py
+│           __init__.py
+│
+└───templates
+    │   base.html
+    │
+    └───render
+            hospital_list.html
+            Service List.html
