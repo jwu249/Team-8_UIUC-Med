@@ -3,6 +3,19 @@
 {% block content %}
 <h2>Available Medical Services</h2>
 
+<h2>Search Medical Services</h2>
+<form method="get">
+    <input type="text" name="q" placeholder="Search by name">
+    <button type="submit">Search</button>
+</form>
+
+<h2>Add New Medical Service</h2>
+<form method="post">
+    {%  csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add</button>
+</form>
+
 <ul>
     {% for service in services %}
         <li>

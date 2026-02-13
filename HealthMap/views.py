@@ -10,6 +10,9 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+#importing forms
+from .forms import MedServiceForm
+
 # Create your views here.
 
 # 1 HTTPResponse (Manual)
