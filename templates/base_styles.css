@@ -1,0 +1,170 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #eef5fb, #dce9f7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #1b2a3a;
+}
+
+/* Main Card */
+.container {
+  width: 900px;
+  background: white;
+  padding: 60px;
+  border-radius: 18px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: #2f80ed;
+  position: relative;
+  border-radius: 6px;
+}
+
+.logo-icon::before,
+.logo-icon::after {
+  content: "";
+  position: absolute;
+  background: white;
+}
+
+.logo-icon::before {
+  width: 18px;
+  height: 4px;
+  top: 16px;
+  left: 9px;
+}
+
+.logo-icon::after {
+  width: 4px;
+  height: 18px;
+  top: 9px;
+  left: 16px;
+}
+
+.logo-text {
+  font-size: 22px;
+  font-weight: 600;
+  color: #2f80ed;
+}
+
+/* Header */
+h1 {
+  font-size: 48px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.subtext {
+  font-size: 18px;
+  color: #5c6f82;
+  margin-bottom: 35px;
+  max-width: 650px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Emergency Button */
+.emergency-btn {
+  display: inline-block;
+  background-color: #eb5757;
+  color: white;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-bottom: 50px;
+  text-decoration: none;
+  transition: 0.3s ease;
+}
+
+.emergency-btn:hover {
+  background-color: #c0392b;
+}
+
+/* Login Section */
+.login-box {
+  background: #f7fbff;
+  padding: 50px;
+  border-radius: 16px;
+  max-width: 600px;
+  margin: auto;
+  box-shadow: inset 0 0 0 1px #e1ecf7;
+}
+
+.login-box h2 {
+  font-size: 38px;
+  margin-bottom: 35px;
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+.form-group label {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccd9e8;
+  transition: 0.3s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #2f80ed;
+  box-shadow: 0 0 0 3px rgba(47,128,237,0.15);
+}
+
+/* Submit Button */
+.submit-btn {
+  margin-top: 15px;
+  padding: 14px 40px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+  background: #2f80ed;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.submit-btn:hover {
+  background: #1c5fc4;
+}
+
+/* Trust Line */
+.trust {
+  margin-top: 25px;
+  font-size: 14px;
+  color: #7b8b9a;
+}
