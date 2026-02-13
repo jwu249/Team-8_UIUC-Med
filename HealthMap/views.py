@@ -4,6 +4,9 @@ from django.views import View
 from django.views.generic import ListView
 from .models import MedService
 
+#importing forms
+from .forms import MedServiceForm
+
 # Create your views here.
 
 # 1 HTTPResponse (Manual)
@@ -28,3 +31,23 @@ class MedServiceListView(ListView):
     model = MedService
     template_name = "render/Service List.html"
     context_object_name = "services"
+
+    def get_queryset(self): # get
+        queryset = super().get_queryset()
+        query = self.request.GET.get("q")
+
+        if query:
+            queryset = queryset.filter(name__icontains=query)
+        return queryset
+
+    def get_context_data(self, **kwargs): # adds form to page
+        context = super().get_context_data(**kwargs)
+        context["form"] = MedServiceForm()
+        return context
+
+    def post(self, request, *args, **kwargs): # creates new MedService
+        form = MedServiceForm(request.POST)
+
+        if form.is_valid():
+            form.save()
+        return self.get(request, *args, **kwargs)
