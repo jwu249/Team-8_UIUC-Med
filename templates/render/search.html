@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Search Medical Services</h2>
+
+<!-- GET form: search by location (visible in URL, bookmarkable) -->
+<h3>Search by Location (GET)</h3>
+<form method="get" action="{% url 'service-search' %}">
+    <input type="text" name="location" value="{{ get_query }}" placeholder="Enter location...">
+    <button type="submit">Search</button>
+</form>
+
+{% if get_results is not None %}
+<h4>Results for "{{ get_query }}"</h4>
+<ul>
+    {% for service in get_results %}
+        <li>
+            <strong>{{ service.name }}</strong> — {{ service.location }}<br>
+            Phone: {{ service.number }}<br>
+            Appointments Required: {{ service.appointments_required|yesno:"Yes,No" }}
+        </li>
+    {% empty %}
+        <p>No services found for "{{ get_query }}".</p>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<hr>
+
+<!-- POST form: filter by appointment requirement (data hidden from URL) -->
+<h3>Filter by Appointment Requirement (POST)</h3>
+<form method="post" action="{% url 'service-search' %}">
+    {% csrf_token %}
+    <label for="appointments">Appointments Required:</label>
+    <select name="appointments" id="appointments">
+        <option value="">-- Select --</option>
+        <option value="yes" {% if post_filter == 'yes' %}selected{% endif %}>Yes</option>
+        <option value="no" {% if post_filter == 'no' %}selected{% endif %}>No</option>
+    </select>
+    <button type="submit">Filter</button>
+</form>
+
+{% if post_results is not None %}
+<h4>Filtered Results (Appointments: {{ post_filter }})</h4>
+<ul>
+    {% for service in post_results %}
+        <li>
+            <strong>{{ service.name }}</strong> — {{ service.location }}<br>
+            Phone: {{ service.number }}<br>
+            Appointments Required: {{ service.appointments_required|yesno:"Yes,No" }}
+        </li>
+    {% empty %}
+        <p>No services found matching that filter.</p>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<hr>
+
+<!-- Relationship-spanning query: History by username (uses __ lookup) -->
+<h3>Search Chat History by Username (Relationship Spanning)</h3>
+<form method="get" action="{% url 'service-search' %}">
+    <input type="text" name="username" value="{{ username_query }}" placeholder="Enter username...">
+    <button type="submit">Search History</button>
+</form>
+
+{% if history_results is not None %}
+<h4>History for users matching "{{ username_query }}"</h4>
+<ul>
+    {% for entry in history_results %}
+        <li>
+            <strong>{{ entry.user.username }}</strong> — {{ entry.date }}<br>
+            {{ entry.message }}
+        </li>
+    {% empty %}
+        <p>No history found for "{{ username_query }}".</p>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<hr>
+
+<!-- Aggregation summaries -->
+<h3>Data Summary</h3>
+<p><strong>Total Services:</strong> {{ total_services }}</p>
+
+<h4>Services per Location</h4>
+<ul>
+    {% for group in services_per_location %}
+        <li>{{ group.location }}: {{ group.count }} service{{ group.count|pluralize }}</li>
+    {% empty %}
+        <p>No data available.</p>
+    {% endfor %}
+</ul>
+
+<hr>
+
+<!-- Full list of all services -->
+<h3>All Medical Services</h3>
+<ul>
+    {% for service in all_services %}
+        <li>
+            <strong>{{ service.name }}</strong> — {{ service.location }}<br>
+            Phone: {{ service.number }}<br>
+            Email: {{ service.email|default:"N/A" }}<br>
+            Appointments Required: {{ service.appointments_required|yesno:"Yes,No" }}
+        </li>
+    {% empty %}
+        <p>No medical services are currently available.</p>
+    {% endfor %}
+</ul>
+{% endblock %}
