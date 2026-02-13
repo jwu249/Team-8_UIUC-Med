@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Service Distribution Chart</h2>
+<p>This chart shows the number of medical services available at each location, generated from database data using Matplotlib.</p>
+
+<img src="{% url 'service-chart-image' %}" alt="Bar chart showing the number of medical services per location">
+
+<p><em>Data is aggregated in real-time from the database using Django ORM.</em></p>
+{% endblock %}
