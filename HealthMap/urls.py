@@ -3,6 +3,7 @@ from .views import (
     hospital_list, hospital_list_render,
     MedServiceBaseView, MedServiceListView,
     service_search, chart_page, chart_image,
+    services_api, services_http_response, # for section 6
 )
 
 urlpatterns = [
@@ -17,4 +18,7 @@ urlpatterns = [
     # Section 4: Data visualization
     path("services/chart/", chart_page, name="service-chart"),
     path("services/chart/image.png", chart_image, name="service-chart-image"),
+    # A3 section 6: API
+    path("api/services/", services_api, name="services-api"),
+    path("api/services-http/", services_http_response, name="services-http")
 ]
