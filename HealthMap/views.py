@@ -1,11 +1,12 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.generic import ListView
 from django.db.models import Count
 from .models import MedService, User, History
 
 import io
+import json
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -125,3 +126,36 @@ def chart_image(request):
     buf.seek(0)
 
     return HttpResponse(buf.read(), content_type='image/png')
+
+def services_api(request):
+    qs = MedService.objects.all()
+
+    name = request.GET.get("name", "").strip()
+    location = request.GET.get("location", "").strip()
+    appointment = request.GET.get("appointments_required", "").strip().lower()
+
+    if name:
+        qs = qs.filter(name__icontains=name)
+    if location:
+        qs = qs.filter(location__icontains=location)
+    if appointment in {"true", "false"}:
+        qs = qs.filter(appointments_required=(appointment == "true"))
+
+    data = [
+        {
+            "id": s.id,
+            "name": s.name,
+            "location": s.location,
+            "appointments_required": s.appointments_required,
+        }
+        for s in qs
+    ]
+
+    return JsonResponse({"count": len(data), "results": data})
+
+def services_http_response(request):
+    payload = {
+        "note": "This endpoint uses HttpResponse, not JsonResponse.",
+        "mime_type": "text/plain",
+    }
+    return HttpResponse(json.dumps(payload), content_type="text/plain; charset=utf-8")
