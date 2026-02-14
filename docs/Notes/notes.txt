@@ -1,9 +1,13 @@
+2/14/26 A3 notes
 
-2/13/26 A3 section 6: API
-Section 6 API Plan:
-implemented function-based API endpoint at /api/services/ that reads query parameters from request.GET and filters our MedService records using Django ORM lookups (e.g., __icontains and boolean exact match).
+Section 1 (URL linking/navigation):
+Implemented get_absolute_url() on MedService so templates can link to detail pages without hard-coded URL patterns. This is useful because if route patterns change, links stay correct as long as get_absolute_url() is updated in one model method.
 
-Data Served:
-API will returns non-sensitive MedService fields only: id, name, location, and appointments_required.
-HttpResponse vs JsonResponse:
-added /api/services-http/ to demonstrate HttpResponse output with text/plain MIME type, while /api/services/ uses JsonResponse with application/json MIME type for proper API behavior.
+Section 3 (static files):
+Static files are organized in a project-level static/ directory with static/css/base_styles.css and static/images/logo.png. Templates load files through {% load static %} and {% static %} so paths are framework-managed instead of manual relative paths.
+
+Cache busting note (optional):
+Current setup does not add hashed filenames yet. A future improvement is enabling ManifestStaticFilesStorage so deployed static assets are cache-busted automatically when content changes.
+
+Section 6 (API):
+Implemented a function-based API endpoint at /api/services/ that reads query parameters from request.GET and filters MedService records with ORM lookups. The API returns non-sensitive fields only (id, name, location, appointments_required). Added /api/services-http/ to demonstrate HttpResponse text/plain vs JsonResponse application/json MIME behavior.

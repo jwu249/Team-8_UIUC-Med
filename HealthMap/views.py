@@ -1,7 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.views import View
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
 from django.db.models import Count
 from .models import MedService, User, History
 
@@ -25,12 +25,23 @@ def hospital_list(request):
 def hospital_list_render(request):
     return render(request, "render/hospital_list.html")
 
+# a3 section 1: home page at "/" so root url does not 404
+def home_page(request):
+    return render(request, "render/home.html")
+
 
 # 3 Base CBV (inherit from View)
 class MedServiceBaseView(View):
     def get(self, request):
+        query = request.GET.get("q", "").strip()
         services = MedService.objects.all()
-        return render(request, "render/Service List.html", {"services": services})
+        if query:
+            services = services.filter(name__icontains=query)
+        return render(
+            request,
+            "render/Service List.html",
+            {"services": services, "form": MedServiceForm(), "query": query},
+        )
 
 
 # 4 Generic CBV (ListView)
@@ -38,6 +49,38 @@ class MedServiceListView(ListView):
     model = MedService
     template_name = "render/Service List.html"
     context_object_name = "services"
+
+    def get_queryset(self):
+        # a3 section 5: GET form search by name
+        queryset = MedService.objects.all()
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            queryset = queryset.filter(name__icontains=query)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = MedServiceForm()
+        context["query"] = self.request.GET.get("q", "").strip()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        # a3 section 5: POST form creates a new MedService
+        form = MedServiceForm(request.POST)
+        if form.is_valid():
+            new_service = form.save()
+            return redirect(new_service.get_absolute_url())
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        context["form"] = form
+        return self.render_to_response(context)
+
+
+class MedServiceDetailView(DetailView):
+    # a3 section 1: detail page served by pk (e.g., /services/3/)
+    model = MedService
+    template_name = "render/service_detail.html"
+    context_object_name = "service"
 
 
 # ──────────────────────────────────────────────
@@ -128,6 +171,7 @@ def chart_image(request):
     return HttpResponse(buf.read(), content_type='image/png')
 
 def services_api(request):
+    # a3 section 6: public JSON endpoint with query-param filtering
     qs = MedService.objects.all()
 
     name = request.GET.get("name", "").strip()
@@ -154,6 +198,7 @@ def services_api(request):
     return JsonResponse({"count": len(data), "results": data})
 
 def services_http_response(request):
+    # a3 section 6: plain HttpResponse version to compare MIME types
     payload = {
         "note": "This endpoint uses HttpResponse, not JsonResponse.",
         "mime_type": "text/plain",

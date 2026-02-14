@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Medical Service Detail</h2>
+<p><strong>Name:</strong> {{ service.name }}</p>
+<p><strong>Location:</strong> {{ service.location }}</p>
+<p><strong>Email:</strong> {{ service.email|default:"N/A" }}</p>
+<p><strong>Phone:</strong> {{ service.number|default:"N/A" }}</p>
+<p><strong>Appointments Required:</strong> {{ service.appointments_required|yesno:"Yes,No" }}</p>
+
+<p><a href="{% url 'service-cbv-generic' %}">Back to all services</a></p>
+{% endblock %}

@@ -4,13 +4,13 @@
 <h2>Available Medical Services</h2>
 
 <h2>Search Medical Services</h2>
-<form method="get">
-    <input type="text" name="q" placeholder="Search by name">
+<form method="get" action="{% url 'service-cbv-generic' %}">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by name">
     <button type="submit">Search</button>
 </form>
 
 <h2>Add New Medical Service</h2>
-<form method="post">
+<form method="post" action="{% url 'service-cbv-generic' %}">
     {%  csrf_token %}
     {{ form.as_p }}
     <button type="submit">Add</button>
@@ -19,13 +19,11 @@
 <ul>
     {% for service in services %}
         <li>
-            <strong>{{ service.name }}</strong><br>
+            <strong><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></strong><br>
             Location: {{ service.location }}<br>
             Phone: {{ service.number }}<br>
             Appointments Required: {{ service.appointments_required|yesno:"Yes,No" }}
         </li>
-        <br>
-
     {% empty %}
         <p>No medical services are currently available.</p>
     {% endfor %}
