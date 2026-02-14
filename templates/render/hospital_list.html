@@ -1,1 +1,7 @@
-Render hospital list
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Manual Render Route</h2>
+<p>This page confirms the FBV + render flow is working.</p>
+<p><a href="{% url 'service-cbv-generic' %}">Go to services list</a></p>
+{% endblock %}

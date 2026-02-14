@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Smart Hospital Navigation</h1>
+<p>
+  Use this app to browse medical services, run filtered searches, and inspect charts
+  generated from the database.
+</p>
+
+<ul>
+  <li><a href="{% url 'service-cbv-generic' %}">Browse all services</a></li>
+  <li><a href="{% url 'service-search' %}">Run ORM search queries</a></li>
+  <li><a href="{% url 'service-chart' %}">View service chart</a></li>
+  <li><a href="{% url 'services-api' %}">Open public API</a></li>
+</ul>
+{% endblock %}

@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 
 class MedService(models.Model):
     """
@@ -17,6 +18,10 @@ class MedService(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.location})"
+
+    # a3 section 1: keeps template links model-driven instead of hardcoded urls
+    def get_absolute_url(self):
+        return reverse("service-detail", kwargs={"pk": self.pk})
 
 
 class User(models.Model):

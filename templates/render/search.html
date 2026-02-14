@@ -15,7 +15,7 @@
 <ul>
     {% for service in get_results %}
         <li>
-            <strong>{{ service.name }}</strong> — {{ service.location }}<br>
+            <strong><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></strong> — {{ service.location }}<br>
             Phone: {{ service.number }}<br>
             Appointments Required: {{ service.appointments_required|yesno:"Yes,No" }}
         </li>
@@ -45,7 +45,7 @@
 <ul>
     {% for service in post_results %}
         <li>
-            <strong>{{ service.name }}</strong> — {{ service.location }}<br>
+            <strong><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></strong> — {{ service.location }}<br>
             Phone: {{ service.number }}<br>
             Appointments Required: {{ service.appointments_required|yesno:"Yes,No" }}
         </li>
@@ -100,7 +100,7 @@
 <ul>
     {% for service in all_services %}
         <li>
-            <strong>{{ service.name }}</strong> — {{ service.location }}<br>
+            <strong><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></strong> — {{ service.location }}<br>
             Phone: {{ service.number }}<br>
             Email: {{ service.email|default:"N/A" }}<br>
             Appointments Required: {{ service.appointments_required|yesno:"Yes,No" }}
@@ -110,3 +110,4 @@
     {% endfor %}
 </ul>
 {% endblock %}
+
