@@ -1,14 +1,14 @@
-asgiref @ file:///opt/miniconda3/conda-bld/asgiref_1760342044893/work
-Bottleneck @ file:///opt/miniconda3/conda-bld/bottleneck_1761937852211/work
-Django @ file:///opt/miniconda3/conda-bld/django_1764329190926/work
-numexpr @ file:///opt/miniconda3/conda-bld/numexpr_1762165518100/work
-numpy @ file:///Users/ec2-user/croot/numpy_and_numpy_base_1768376200011/work/dist/numpy-2.4.1-cp313-cp313-macosx_12_0_arm64.whl#sha256=3b714995ac0ff7924f104fe7f63d06a39b53590e924be0ed6f97c6d324a182b4
-packaging @ file:///opt/miniconda3/conda-bld/packaging_1761049079023/work
-pandas @ file:///opt/miniconda3/conda-bld/pandas_1762332179809/work/dist/pandas-2.3.3-cp313-cp313-macosx_12_0_arm64.whl#sha256=e15ab5e76dfcac9817c2633549d6e4cb87e6a735ade38ff7afbfa488f280b9ba
-python-dateutil @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/python-dateutil_1728585579455/work
-pytz @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_3bjczh6it0/croot/pytz_1752135865541/work
+#asgiref @ file:///opt/miniconda3/conda-bld/asgiref_1760342044893/work
+#Bottleneck @ file:///opt/miniconda3/conda-bld/bottleneck_1761937852211/work
+#Django @ file:///opt/miniconda3/conda-bld/django_1764329190926/work
+#numexpr @ file:///opt/miniconda3/conda-bld/numexpr_1762165518100/work
+#numpy @ file:///Users/ec2-user/croot/numpy_and_numpy_base_1768376200011/work/dist/numpy-2.4.1-cp313-cp313-macosx_12_0_arm64.whl#sha256=3b714995ac0ff7924f104fe7f63d06a39b53590e924be0ed6f97c6d324a182b4
+#packaging @ file:///opt/miniconda3/conda-bld/packaging_1761049079023/work
+#pandas @ file:///opt/miniconda3/conda-bld/pandas_1762332179809/work/dist/pandas-2.3.3-cp313-cp313-macosx_12_0_arm64.whl#sha256=e15ab5e76dfcac9817c2633549d6e4cb87e6a735ade38ff7afbfa488f280b9ba
+#python-dateutil @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/python-dateutil_1728585579455/work
+#pytz @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_3bjczh6it0/croot/pytz_1752135865541/work
 setuptools==80.10.1
-six @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_03myqm7p6o/croot/six_1744271511946/work
-sqlparse @ file:///opt/miniconda3/conda-bld/sqlparse_1764240029253/work
-tzdata @ file:///home/task_176829656558347/croot/python-tzdata_1768296637279/work
+#six @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_03myqm7p6o/croot/six_1744271511946/work
+#sqlparse @ file:///opt/miniconda3/conda-bld/sqlparse_1764240029253/work
+#tzdata @ file:///home/task_176829656558347/croot/python-tzdata_1768296637279/work
 wheel==0.46.3
