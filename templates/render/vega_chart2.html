@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Chart 2: Appointment Requirement Breakdown (Line)</h2>
+<p>
+    ELI5: same idea as Chart 1, different picture.
+    We fetch grouped counts from API, then draw a line from those points.
+</p>
+
+<p><strong>Data URL:</strong> <code>{% url 'api-summary-appointments' %}</code></p>
+
+<div id="vis-chart2"></div>
+
+<!-- Vega libraries from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
+<script>
+  // Another "recipe card" for chart 2.
+  // We use a line here because assignment asks for bar + line/scatter combo.
+  const chartSpec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "description": "Line chart showing appointment requirement category counts.",
+    "data": {
+      "url": "{% url 'api-summary-appointments' %}"
+    },
+    "mark": {"type": "line", "point": true, "color": "#1E5AA8", "tooltip": true},
+    "encoding": {
+      "x": {"field": "category", "type": "nominal", "title": "Category"},
+      "y": {"field": "count", "type": "quantitative", "title": "Number of Services"}
+    },
+    "width": "container",
+    "height": 360
+  };
+
+  // Same mount step as chart 1.
+  vegaEmbed("#vis-chart2", chartSpec, {"actions": false});
+</script>
+{% endblock %}

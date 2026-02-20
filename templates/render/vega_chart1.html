@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Chart 1: Services by Location (Bar)</h2>
+<p>
+    ELI5: we ask our own API "how many services per location?",
+    then Vega-Lite draws bars from that answer.
+</p>
+
+<p><strong>Data URL:</strong> <code>{% url 'api-summary' %}</code></p>
+
+<div id="vis-chart1"></div>
+
+<!-- Vega libraries from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
+<script>
+  // Casual explanation:
+  // This object is just a "recipe card" telling Vega-Lite what to draw.
+  // - data.url: where to fetch JSON
+  // - mark: "bar" means bar chart
+  // - encoding: what field goes on x and y
+  const chartSpec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "description": "Bar chart of service counts by location from internal API.",
+    "data": {
+      "url": "{% url 'api-summary' %}"
+    },
+    "mark": {"type": "bar", "color": "#E84A27", "tooltip": true},
+    "encoding": {
+      "x": {"field": "category", "type": "nominal", "title": "Location", "sort": "-y"},
+      "y": {"field": "count", "type": "quantitative", "title": "Number of Services"}
+    },
+    "width": "container",
+    "height": 360
+  };
+
+  // This line actually "mounts" the chart into the div above.
+  vegaEmbed("#vis-chart1", chartSpec, {"actions": false});
+</script>
+{% endblock %}

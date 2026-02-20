@@ -1,10 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Service Distribution Chart</h2>
-<p>This chart shows the number of medical services available at each location, generated from database data using Matplotlib.</p>
+<h2>Vega-Lite Charts</h2>
+<p>
+    This page is a quick "jump pad" to both required Vega-Lite chart endpoints.
+    Each chart pulls data from our own internal API URLs (no inline hardcoded data).
+</p>
 
-<img src="{% url 'service-chart-image' %}" alt="Bar chart showing the number of medical services per location">
-
-<p><em>Data is aggregated in real-time from the database using Django ORM.</em></p>
+<ul>
+    <li><a href="{% url 'vega-chart1' %}">Chart 1 (Bar): Services by Location</a></li>
+    <li><a href="{% url 'vega-chart2' %}">Chart 2 (Line): Appointment Requirement Breakdown</a></li>
+    <li><a href="{% url 'api-summary' %}">Internal API used by Chart 1</a></li>
+    <li><a href="{% url 'api-summary-appointments' %}">Internal API used by Chart 2</a></li>
+</ul>
 {% endblock %}

@@ -170,6 +170,81 @@ def chart_image(request):
 
     return HttpResponse(buf.read(), content_type='image/png')
 
+# ----------------------------
+# Part 1.1 - Internal APIs for charts
+# ----------------------------
+#
+# ELI5 version:
+# The frontend chart page needs "plain data", not HTML.
+# So we build tiny JSON endpoints whose whole job is:
+# 1) ask DB for grouped numbers
+# 2) return those numbers in a super simple format
+# 3) let Vega-Lite read that URL directly
+#
+# This is mandatory for A4 Part 1.1.
+def api_summary_location_counts(request):
+    # Group by location and count how many services are in each location.
+    # Think: "make piles by city, then count each pile."
+    grouped = (
+        MedService.objects.values("location")
+        .annotate(count=Count("id"))
+        .order_by("-count", "location")
+    )
+
+    # Keep output chart-friendly and tiny.
+    # Example:
+    # [
+    #   {"category": "Champaign", "count": 8},
+    #   {"category": "Urbana", "count": 5}
+    # ]
+    payload = [
+        {"category": row["location"], "count": row["count"]}
+        for row in grouped
+    ]
+
+    # safe=False lets us return a top-level list, which is perfect for charts.
+    return JsonResponse(payload, safe=False)
+
+
+def api_summary_appointments(request):
+    # Group by True/False and count each side.
+    # True = appointments required, False = walk-in style.
+    grouped = (
+        MedService.objects.values("appointments_required")
+        .annotate(count=Count("id"))
+        .order_by("-count")
+    )
+
+    # Friendly labels so teammates and graders can read output quickly.
+    # If we left it as True/False it's still valid, just harder to scan.
+    payload = [
+        {
+            "category": "Appointments Required" if row["appointments_required"] else "Walk-In / Optional",
+            "count": row["count"],
+        }
+        for row in grouped
+    ]
+    return JsonResponse(payload, safe=False)
+
+
+# ----------------------------
+# Part 1.2 - Vega-Lite chart pages
+# ----------------------------
+# These views only render HTML shells.
+# Actual chart data is fetched client-side from our internal API URLs above.
+def vega_chart1_page(request):
+    return render(request, "render/vega_chart1.html")
+
+
+def vega_chart2_page(request):
+    return render(request, "render/vega_chart2.html")
+
+
+def vega_chart_hub_page(request):
+    # Simple "index" page so people can click into both chart endpoints quickly.
+    return render(request, "render/chart.html")
+
+
 def services_api(request):
     # a3 section 6: public JSON endpoint with query-param filtering
     qs = MedService.objects.all()

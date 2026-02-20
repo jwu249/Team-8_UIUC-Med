@@ -10,7 +10,11 @@
 <ul>
   <li><a href="{% url 'service-cbv-generic' %}">Browse all services</a></li>
   <li><a href="{% url 'service-search' %}">Run ORM search queries</a></li>
-  <li><a href="{% url 'service-chart' %}">View service chart</a></li>
+  <li><a href="{% url 'service-chart' %}">Vega-Lite chart hub</a></li>
+  <li><a href="{% url 'vega-chart1' %}">Vega chart 1 (bar)</a></li>
+  <li><a href="{% url 'vega-chart2' %}">Vega chart 2 (line)</a></li>
+  <li><a href="{% url 'api-summary' %}">Internal API: location summary</a></li>
+  <li><a href="{% url 'api-summary-appointments' %}">Internal API: appointments summary</a></li>
   <li><a href="{% url 'services-api' %}">Open public API</a></li>
 </ul>
 {% endblock %}
