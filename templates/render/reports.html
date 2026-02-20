@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Reports</h2>
+
+<!-- Export buttons -->
+<section>
+    <h3>Export Data</h3>
+    <a href="{% url 'export-csv' %}"><button type="button">Download CSV</button></a>
+    <a href="{% url 'export-json' %}"><button type="button">Download JSON</button></a>
+</section>
+
+<hr>
+
+<!-- Totals -->
+<section>
+    <h3>Totals</h3>
+    <p>Total Medical Services: <strong>{{ total_services }}</strong></p>
+</section>
+
+<hr>
+
+<!-- Grouped summary 1: services per location -->
+<section>
+    <h3>Services by Location</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Location</th>
+                <th>Number of Services</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in services_by_location %}
+            <tr>
+                <td>{{ row.location }}</td>
+                <td>{{ row.count }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2">No data available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<hr>
+
+<!-- Grouped summary 2: services by appointment requirement -->
+<section>
+    <h3>Services by Appointment Requirement</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Appointments Required</th>
+                <th>Number of Services</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in services_by_appointment %}
+            <tr>
+                <td>{{ row.appointments_required|yesno:"Yes,No" }}</td>
+                <td>{{ row.count }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2">No data available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
