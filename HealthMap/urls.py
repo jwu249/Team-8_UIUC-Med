@@ -6,6 +6,7 @@ from .views import (
     services_api, services_http_response, # for section 6
     api_summary_location_counts, api_summary_appointments,
     vega_chart1_page, vega_chart2_page, vega_chart_hub_page,
+    export_csv, export_json, reports_page,
 )
 
 urlpatterns = [
@@ -32,5 +33,9 @@ urlpatterns = [
     path("vega-lite/chart2/", vega_chart2_page, name="vega-chart2"),
     # A3 section 6: API
     path("api/services/", services_api, name="services-api"),  # a3 section 6 JsonResponse
-    path("api/services-http/", services_http_response, name="services-http")  # a3 section 6 HttpResponse demo
+    path("api/services-http/", services_http_response, name="services-http"),  # a3 section 6 HttpResponse demo
+    # A4 part 3: CSV & JSON export + reports
+    path("reports/", reports_page, name="reports"),
+    path("reports/export/csv/", export_csv, name="export-csv"),
+    path("reports/export/json/", export_json, name="export-json"),
 ]

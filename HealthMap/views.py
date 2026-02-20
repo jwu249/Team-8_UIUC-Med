@@ -5,8 +5,10 @@ from django.views.generic import ListView, DetailView
 from django.db.models import Count
 from .models import MedService, User, History
 
+import csv
 import io
 import json
+import datetime
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -279,3 +281,72 @@ def services_http_response(request):
         "mime_type": "text/plain",
     }
     return HttpResponse(json.dumps(payload), content_type="text/plain; charset=utf-8")
+
+
+# ──────────────────────────────────────────────
+# Part 3: CSV & JSON Export + Reports
+# ──────────────────────────────────────────────
+
+def export_csv(request):
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+    filename = f"medservices_{timestamp}.csv"
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+    writer.writerow(["ID", "Name", "Location", "Email", "Phone", "Appointments Required"])
+
+    for s in MedService.objects.all().order_by("name"):
+        writer.writerow([s.id, s.name, s.location, s.email or "", s.number or "", s.appointments_required])
+
+    return response
+
+
+def export_json(request):
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+    filename = f"medservices_{timestamp}.json"
+
+    services = MedService.objects.all().order_by("name")
+    data = {
+        "generated_at": datetime.datetime.now().isoformat(),
+        "record_count": services.count(),
+        "services": [
+            {
+                "id": s.id,
+                "name": s.name,
+                "location": s.location,
+                "email": s.email,
+                "number": s.number,
+                "appointments_required": s.appointments_required,
+            }
+            for s in services
+        ],
+    }
+
+    response = JsonResponse(data, json_dumps_params={"indent": 2})
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+def reports_page(request):
+    total_services = MedService.objects.count()
+
+    services_by_location = (
+        MedService.objects.values("location")
+        .annotate(count=Count("id"))
+        .order_by("-count", "location")
+    )
+
+    services_by_appointment = (
+        MedService.objects.values("appointments_required")
+        .annotate(count=Count("id"))
+        .order_by("-appointments_required")
+    )
+
+    context = {
+        "total_services": total_services,
+        "services_by_location": services_by_location,
+        "services_by_appointment": services_by_appointment,
+    }
+    return render(request, "render/reports.html", context)
