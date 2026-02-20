@@ -9,7 +9,9 @@
 
 <p><strong>Data URL:</strong> <code>{% url 'api-summary-appointments' %}</code></p>
 
-<div id="vis-chart2"></div>
+<div id="vis-chart2" style="min-height: 390px;"></div>
+<p id="chart2-status" style="margin-top: 8px; color: #b00020; font-weight: 600;"></p>
+<noscript><p style="margin-top: 8px; color: #b00020; font-weight: 600;">JavaScript is disabled. Vega-Lite charts require JavaScript.</p></noscript>
 
 <!-- Vega libraries from CDN -->
 <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
@@ -30,11 +32,49 @@
       "x": {"field": "category", "type": "nominal", "title": "Category"},
       "y": {"field": "count", "type": "quantitative", "title": "Number of Services"}
     },
-    "width": "container",
-    "height": 360
+    "width": 760,
+    "height": 360,
+    "config": {
+      "view": {"stroke": "#d7e3f0"},
+      "axis": {"labelColor": "#1b2a3a", "titleColor": "#1b2a3a"}
+    }
   };
 
-  // Same mount step as chart 1.
-  vegaEmbed("#vis-chart2", chartSpec, {"actions": false});
+  const statusEl = document.getElementById("chart2-status");
+  const dataUrl = "{% url 'api-summary-appointments' %}";
+  statusEl.textContent = "Loading chart...";
+
+  if (typeof vegaEmbed === "undefined") {
+    statusEl.textContent = "Chart libraries failed to load (CDN blocked or offline).";
+  } else {
+    fetch(dataUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`API request failed (${response.status})`);
+        }
+        return response.json();
+      })
+      .then((rows) => {
+        if (!Array.isArray(rows) || rows.length === 0) {
+          statusEl.textContent = "No chart data found. Add MedService rows, then refresh.";
+          return;
+        }
+        return vegaEmbed("#vis-chart2", chartSpec, {"actions": false, "renderer": "svg"})
+          .then(() => {
+            const svg = document.querySelector("#vis-chart2 svg");
+            if (!svg) {
+              statusEl.textContent = "Chart rendered but SVG node was not found.";
+              return;
+            }
+            const w = svg.getAttribute("width");
+            const h = svg.getAttribute("height");
+            statusEl.textContent = `Rendered chart SVG (${w}x${h}).`;
+            setTimeout(() => { statusEl.textContent = ""; }, 1500);
+          });
+      })
+      .catch((error) => {
+        statusEl.textContent = `Chart failed: ${error.message}`;
+      });
+  }
 </script>
 {% endblock %}
