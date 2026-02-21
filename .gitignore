@@ -20,3 +20,10 @@ Thumbs.db
 
 *.sqlite3
 db.sqlite3
+
+# static files
+staticfiles/
+__pycache__/
+*.pyc
+.venv/
+venv/

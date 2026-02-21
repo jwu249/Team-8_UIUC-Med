@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from HealthDestination.secrets_environment import env # import env file from secrets_environment.py
-import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent # added an extra parent to view templates
@@ -111,7 +110,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') #console told me this is needed for static files
+STATIC_ROOT = BASE_DIR / 'staticfiles' #needed for static files
 # a3 section 3: project-level static dir (css/images)
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
