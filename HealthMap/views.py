@@ -13,6 +13,9 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+import requests
+
+
 #importing forms
 from .forms import MedServiceForm
 
@@ -350,3 +353,38 @@ def reports_page(request):
         "services_by_appointment": services_by_appointment,
     }
     return render(request, "render/reports.html", context)
+
+def get_location(request):
+    query = request.GET.get("q")
+
+    if not query:
+        return JsonResponse({"error": "Missing ?q="}, status=400)
+    url = "https://nominatim.openstreetmap.org/search"
+
+    try:
+        response = requests.get(
+            url,
+            params={
+                "q": query,
+                "format": "json",
+                "limit": 1
+            },
+            headers={
+                "User-Agent": "healthdestination-app"
+            },
+            timeout=5
+        )
+        response.raise_for_status()
+        data=response.json()
+
+        if not data:
+            return JsonResponse({"error": "Location not found"}, status=404)
+
+        return JsonResponse({
+            "query": query,
+            "latitude": data[0]["lat"],
+            "longitude": data[0]["lon"],
+        })
+
+    except requests.RequestException as e:
+        return JsonResponse({"error": str(e)}, status=500)
