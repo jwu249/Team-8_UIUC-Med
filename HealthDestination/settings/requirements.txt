@@ -12,3 +12,7 @@ setuptools==80.10.1
 #sqlparse @ file:///opt/miniconda3/conda-bld/sqlparse_1764240029253/work
 #tzdata @ file:///home/task_176829656558347/croot/python-tzdata_1768296637279/work
 wheel==0.46.3
+Django==6.0.2
+django-cors-headers==4.9.0
+django-environ==0.12.0
+django-tailwind==4.2.0
