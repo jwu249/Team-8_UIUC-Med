@@ -1,0 +1,30 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Bar chart grouped by location from the public services API.",
+  "data": {
+    "url": "https://uiucmed.pythonanywhere.com/api/services/",
+    "format": {
+      "property": "results"
+    }
+  },
+  "mark": {
+    "type": "bar",
+    "color": "#E84A27",
+    "tooltip": true
+  },
+  "encoding": {
+    "x": {
+      "field": "location",
+      "type": "nominal",
+      "title": "Location",
+      "sort": "-y"
+    },
+    "y": {
+      "aggregate": "count",
+      "type": "quantitative",
+      "title": "Number of Services"
+    }
+  },
+  "width": 760,
+  "height": 360
+}
