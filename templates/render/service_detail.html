@@ -1,12 +1,69 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Medical Service Detail</h2>
-<p><strong>Name:</strong> {{ service.name }}</p>
-<p><strong>Location:</strong> {{ service.location }}</p>
-<p><strong>Email:</strong> {{ service.email|default:"N/A" }}</p>
-<p><strong>Phone:</strong> {{ service.number|default:"N/A" }}</p>
-<p><strong>Appointments Required:</strong> {{ service.appointments_required|yesno:"Yes,No" }}</p>
+<a href="{% url 'service-cbv-generic' %}" style="font-size:13px; color:var(--muted); display:inline-flex; align-items:center; gap:4px; margin-bottom:16px;">&#8592; Back to all services</a>
 
-<p><a href="{% url 'service-cbv-generic' %}">Back to all services</a></p>
+<h1 style="margin-bottom:6px;">{{ service.name }}</h1>
+
+<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;">
+  {% if service.google_rating %}
+    <span class="badge badge-star">&#11088; {{ service.google_rating }} / 5</span>
+  {% endif %}
+  {% if service.appointments_required %}
+    <span class="badge badge-orange">Appointment Required</span>
+  {% else %}
+    <span class="badge badge-green">Walk-in Welcome</span>
+  {% endif %}
+  {% if service.accepts_insurance %}
+    <span class="badge badge-blue">Insurance Accepted</span>
+  {% else %}
+    <span class="badge badge-gray">No Insurance</span>
+  {% endif %}
+</div>
+
+{% if service.description %}
+  <p style="color:var(--ink); margin-bottom:20px; font-size:15px;">{{ service.description }}</p>
+{% endif %}
+
+<table class="detail-table">
+  <tbody>
+    <tr><th>Address</th><td>{{ service.location }}</td></tr>
+    <tr><th>Phone</th><td>{{ service.number|default:"—" }}</td></tr>
+    <tr><th>Email</th><td>{{ service.email|default:"—" }}</td></tr>
+    {% if service.hours %}
+      <tr><th>Hours</th><td>{{ service.hours }}</td></tr>
+    {% endif %}
+    {% if service.payment_options %}
+      <tr><th>Payment Options</th><td>{{ service.payment_options }}</td></tr>
+    {% endif %}
+    {% if service.services_offered %}
+      <tr><th>Services Offered</th><td>{{ service.services_offered }}</td></tr>
+    {% endif %}
+    {% if service.website %}
+      <tr><th>Website</th><td><a href="{{ service.website }}" target="_blank">{{ service.website }}</a></td></tr>
+    {% endif %}
+  </tbody>
+</table>
+
+{% if service.latitude and service.longitude %}
+  <h3>Location</h3>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <div id="detail-map"
+       data-lat="{{ service.latitude }}"
+       data-lng="{{ service.longitude }}"
+       data-name="{{ service.name }}"
+       style="height: 320px; border-radius: 10px; margin-top: 8px; border: 1px solid var(--edge);"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const mapEl = document.getElementById('detail-map');
+    const lat = parseFloat(mapEl.dataset.lat);
+    const lng = parseFloat(mapEl.dataset.lng);
+    const name = mapEl.dataset.name;
+    const m = L.map('detail-map').setView([lat, lng], 17);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(m);
+    L.marker([lat, lng]).addTo(m).bindPopup(name).openPopup();
+  </script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Nearby Medical Services</h2>
+<p>The map shows all services with location data. Click a marker to view details.</p>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<div id="map" style="height: 550px; width: 100%; border-radius: 8px;"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const map = L.map('map').setView([40.1020, -88.2272], 13); // default: Champaign-Urbana
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Load service markers from our internal geo API
+  fetch("{% url 'api-services-geo' %}")
+    .then(res => res.json())
+    .then(services => {
+      if (services.length === 0) {
+        document.getElementById('map').insertAdjacentHTML(
+          'afterend',
+          '<p><em>No services with location data yet. Add coordinates via the admin panel.</em></p>'
+        );
+        return;
+      }
+
+      const bounds = [];
+      services.forEach(s => {
+        const marker = L.marker([s.lat, s.lng]).addTo(map);
+        const rating = s.rating ? `⭐ ${s.rating}/5` : 'No rating';
+        const appt = s.appointments_required ? 'Appointment required' : 'Walk-in welcome';
+        marker.bindPopup(`
+          <strong>${s.name}</strong><br>
+          ${s.location}<br>
+          ${rating} &nbsp;|&nbsp; ${appt}<br>
+          <a href="${s.url}">View details →</a>
+        `);
+        bounds.push([s.lat, s.lng]);
+      });
+
+      // Zoom map to fit all markers
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [40, 40] });
+      }
+    });
+
+  // Try to show the user's own location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const { latitude, longitude } = pos.coords;
+      L.circleMarker([latitude, longitude], {
+        radius: 10, color: '#E84A27', fillColor: '#E84A27', fillOpacity: 0.8
+      }).addTo(map).bindPopup('Your location').openPopup();
+    });
+  }
+</script>
+{% endblock %}

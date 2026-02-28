@@ -1,20 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Smart Hospital Navigation</h1>
+{% if user.is_authenticated %}
+
+<h1>How are you feeling today?</h1>
+<p>Describe your symptoms and we'll help you find the right care nearby.</p>
+
+<div style="max-width: 640px;">
+  <div class="chat-window">
+    <em>AI assistant coming soon — your conversation will appear here.</em>
+  </div>
+  <form class="chat-input-row">
+    <input type="text" placeholder="e.g. sore throat with runny nose..." disabled>
+    <button type="submit" disabled>Send</button>
+  </form>
+  <p style="font-size: 13px; margin-top: 8px;">
+    AI integration in progress. Browse services or use the map in the meantime.
+  </p>
+</div>
+
+<hr>
+
+<h2>Find Care</h2>
+<ul class="quick-links">
+  <li><a href="{% url 'map' %}">&#128205; Map View</a></li>
+  <li><a href="{% url 'service-cbv-generic' %}">&#127973; All Services</a></li>
+  <li><a href="{% url 'service-search' %}">&#128269; Search</a></li>
+</ul>
+
+{% else %}
+
+<h1>UIUC Med</h1>
+<p>A smart medical service assistant — find the right care for your symptoms, nearby.</p>
 <p>
-  Use this app to browse medical services, run filtered searches, and inspect charts
-  generated from the database.
+  <a href="{% url 'login' %}">Login</a> or <a href="{% url 'signup' %}">Sign Up</a> to get started.
 </p>
 
-<ul>
-  <li><a href="{% url 'service-cbv-generic' %}">Browse all services</a></li>
-  <li><a href="{% url 'service-search' %}">Run ORM search queries</a></li>
-  <li><a href="{% url 'service-chart' %}">Vega-Lite chart hub</a></li>
-  <li><a href="{% url 'vega-chart1' %}">Vega chart 1 (bar)</a></li>
-  <li><a href="{% url 'vega-chart2' %}">Vega chart 2 (line)</a></li>
-  <li><a href="{% url 'api-summary' %}">Internal API: location summary</a></li>
-  <li><a href="{% url 'api-summary-appointments' %}">Internal API: appointments summary</a></li>
-  <li><a href="{% url 'services-api' %}">Open public API</a></li>
-</ul>
+{% endif %}
 {% endblock %}

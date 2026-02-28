@@ -425,4 +425,36 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
+    return redirect("login")
+
+
+# ──────────────────────────────────────────────
+# Demo: Map + Geo API
+# ──────────────────────────────────────────────
+
+@login_required
+def map_view(request):
+    return render(request, "render/map.html")
+
+
+def api_services_geo(request):
+    """
+    Public JSON endpoint returning all services that have coordinates.
+    Used by the Leaflet map to drop markers.
+    """
+    qs = MedService.objects.exclude(latitude=None).exclude(longitude=None)
+    data = [
+        {
+            "id": s.id,
+            "name": s.name,
+            "location": s.location,
+            "lat": float(s.latitude),
+            "lng": float(s.longitude),
+            "rating": float(s.google_rating) if s.google_rating else None,
+            "appointments_required": s.appointments_required,
+            "url": s.get_absolute_url(),
+        }
+        for s in qs
+    ]
+    return JsonResponse(data, safe=False)
     return redirect("home")
