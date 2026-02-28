@@ -42,20 +42,15 @@ print("appointments required:", required)
 print("walk-in/optional:", optional)
 ```
 
+
 ### Data used
 We used `results` from the API response, specifically:
 - `location`
 - `appointments_required`
 
 ### Output/result
-```text
-total rows: <N>
-top locations:
-  Champaign: <x>
-  Urbana: <x>
-appointments required: <x>
-walk-in/optional: <x>
-```
+
+![case1.png](case1.png)
 
 ### Screenshot(s)
 - `use_case1_python_script_output.png` (show script + terminal output)
@@ -106,9 +101,8 @@ From `results`, we imported:
 A table appears in Sheets with one row per API record, and it can be filtered or charted.
 
 ### Screenshot(s)
-- `use_case2_google_sheets_script.png` (Apps Script code)
-- `use_case2_google_sheets_table.png` (imported table in sheet)
-
+![case2_1](case2_1.png)
+![case2_2](case2_2.png)
 ---
 
 ## Use Case 3: Quick notebook-style stats with pandas
@@ -140,19 +134,7 @@ print(df["appointments_required"].value_counts(dropna=False))
 Same API `results`, loaded into a dataframe for grouped counting.
 
 ### Output/result
-```text
-shape: (<rows>, <cols>)
-services by location:
-<location breakdown>
-appointments split:
-True     <x>
-False    <x>
-```
-
-### Screenshot(s)
-- `use_case3_notebook_code.png` (code cell)
-- `use_case3_notebook_output.png` (printed output/table)
-
+![case3.png](case3.png)
 ---
 
 ## Wrap-up
