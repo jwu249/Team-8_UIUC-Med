@@ -255,9 +255,14 @@ def vega_chart_hub_page(request):
     # Simple "index" page so people can click into both chart endpoints quickly.
     return render(request, "render/chart.html")
 
-@login_required()
+def vega_public_api_page(request):
+    # Part 3 version: this page's chart pulls from the public API endpoint.
+    # Same chart idea as before, just using the endpoint that must be publicly reachable.
+    return render(request, "render/vega_public_api.html")
+
 def services_api(request):
-    # a3 section 6: public JSON endpoint with query-param filtering
+    # Part 3 requires this endpoint to be public (no login wall).
+    # We still keep filtering + safe fields only.
     qs = MedService.objects.all()
 
     name = request.GET.get("name", "").strip()
@@ -452,3 +457,4 @@ def api_services_geo(request):
         for s in qs
     ]
     return JsonResponse(data, safe=False)
+    return redirect("home")

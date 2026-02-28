@@ -5,7 +5,7 @@ from .views import (
     service_search, chart_image,
     services_api, services_http_response,
     api_summary_location_counts, api_summary_appointments,
-    vega_chart1_page, vega_chart2_page, vega_chart_hub_page,
+    vega_chart1_page, vega_chart2_page, vega_chart_hub_page, vega_public_api_page,
     export_csv, export_json, reports_page, get_location,
     signup_view, login_view, logout_view,
     map_view, api_services_geo,
@@ -33,6 +33,7 @@ urlpatterns = [
     # A4 part 1.2: dedicated Vega-Lite chart endpoints (HTML pages)
     path("vega-lite/chart1/", vega_chart1_page, name="vega-chart1"),
     path("vega-lite/chart2/", vega_chart2_page, name="vega-chart2"),
+    path("vega-lite/public-api/", vega_public_api_page, name="vega-public-api"),
     # A3 section 6: API
     path("api/services/", services_api, name="services-api"),  # a3 section 6 JsonResponse
     path("api/services-http/", services_http_response, name="services-http"),  # a3 section 6 HttpResponse demo
