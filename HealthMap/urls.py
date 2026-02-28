@@ -6,7 +6,8 @@ from .views import (
     services_api, services_http_response, # for section 6
     api_summary_location_counts, api_summary_appointments,
     vega_chart1_page, vega_chart2_page, vega_chart_hub_page,
-    export_csv, export_json, reports_page, get_location
+    export_csv, export_json, reports_page, get_location,
+    signup_view, login_view, logout_view
 )
 
 urlpatterns = [
@@ -40,5 +41,10 @@ urlpatterns = [
     path("reports/export/json/", export_json, name="export-json"),
 
     # A4 part 2
-    path("api/location/", get_location, name="get_location")
+    path("api/location/", get_location, name="get_location"),
+
+    # A5
+    path("signup/", signup_view, name="signup"),
+    path("login/", login_view, name="login"),
+    path("logout/", logout_view, name="logout")
 ]

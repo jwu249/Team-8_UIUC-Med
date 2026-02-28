@@ -19,6 +19,11 @@ import requests
 #importing forms
 from .forms import MedServiceForm
 
+from django.contrib.auth import login, logout
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
+from .forms import SignUpForm
+
 # Create your views here.
 
 # 1 HTTPResponse (Manual)
@@ -187,6 +192,7 @@ def chart_image(request):
 # 3) let Vega-Lite read that URL directly
 #
 # This is mandatory for A4 Part 1.1.
+@login_required
 def api_summary_location_counts(request):
     # Group by location and count how many services are in each location.
     # Think: "make piles by city, then count each pile."
@@ -210,7 +216,7 @@ def api_summary_location_counts(request):
     # safe=False lets us return a top-level list, which is perfect for charts.
     return JsonResponse(payload, safe=False)
 
-
+@login_required
 def api_summary_appointments(request):
     # Group by True/False and count each side.
     # True = appointments required, False = walk-in style.
@@ -249,7 +255,7 @@ def vega_chart_hub_page(request):
     # Simple "index" page so people can click into both chart endpoints quickly.
     return render(request, "render/chart.html")
 
-
+@login_required()
 def services_api(request):
     # a3 section 6: public JSON endpoint with query-param filtering
     qs = MedService.objects.all()
@@ -289,7 +295,7 @@ def services_http_response(request):
 # ──────────────────────────────────────────────
 # Part 3: CSV & JSON Export + Reports
 # ──────────────────────────────────────────────
-
+@login_required
 def export_csv(request):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename = f"medservices_{timestamp}.csv"
@@ -305,7 +311,7 @@ def export_csv(request):
 
     return response
 
-
+@login_required
 def export_json(request):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename = f"medservices_{timestamp}.json"
@@ -331,7 +337,7 @@ def export_json(request):
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
 
-
+@login_required
 def reports_page(request):
     total_services = MedService.objects.count()
 
@@ -388,3 +394,30 @@ def get_location(request):
 
     except requests.RequestException as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+def signup_view(request):
+    if request.method == "POST":
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("home")
+    else:
+        form = SignUpForm()
+
+    return render(request, "registration/signup.html", {"form": form})
+
+def login_view(request):
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect("home")
+    else:
+        form = AuthenticationForm()
+    return render(request, "registration/login.html", {"form": form})
+
+def logout_view(request):
+    logout(request)
+    return redirect("home")
