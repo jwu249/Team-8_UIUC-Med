@@ -1,31 +1,60 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Available Medical Services</h2>
+<h1>Medical Services</h1>
 
-<h2>Search Medical Services</h2>
-<form method="get" action="{% url 'service-cbv-generic' %}">
-    <input type="text" name="q" value="{{ query }}" placeholder="Search by name">
+<form method="get" action="{% url 'service-cbv-generic' %}" style="margin-bottom:0;">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by name...">
     <button type="submit">Search</button>
+    {% if query %}<a href="{% url 'service-cbv-generic' %}" style="align-self:center;font-size:13px;">Clear</a>{% endif %}
 </form>
 
-<h2>Add New Medical Service</h2>
-<form method="post" action="{% url 'service-cbv-generic' %}">
-    {%  csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add</button>
-</form>
+<details style="margin: 8px 0 20px;">
+  <summary style="cursor:pointer; font-size:13px; font-weight:600; color:var(--muted);">+ Add a new service</summary>
+  <div style="margin-top:12px; padding:20px; background:#f8fafc; border-radius:10px; border:1px solid var(--edge);">
+    <h3 style="margin-top:0;">Add New Medical Service</h3>
+    <form method="post" action="{% url 'service-cbv-generic' %}">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Add Service</button>
+    </form>
+  </div>
+</details>
 
-<ul>
+<div class="service-grid">
     {% for service in services %}
-        <li>
-            <strong><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></strong><br>
-            Location: {{ service.location }}<br>
-            Phone: {{ service.number }}<br>
-            Appointments Required: {{ service.appointments_required|yesno:"Yes,No" }}
-        </li>
+    <div class="service-card">
+        <a class="service-card-name" href="{{ service.get_absolute_url }}">{{ service.name }}</a>
+        <div class="service-card-location">{{ service.location }}</div>
+
+        {% if service.description %}
+        <p class="service-card-desc">{{ service.description|truncatewords:18 }}</p>
+        {% endif %}
+
+        <div class="service-card-meta">
+            {% if service.google_rating %}
+            <span class="badge badge-star">&#11088; {{ service.google_rating }}/5</span>
+            {% endif %}
+
+            {% if service.appointments_required %}
+            <span class="badge badge-orange">Appt. Required</span>
+            {% else %}
+            <span class="badge badge-green">Walk-in OK</span>
+            {% endif %}
+
+            {% if service.accepts_insurance %}
+            <span class="badge badge-blue">Insurance</span>
+            {% else %}
+            <span class="badge badge-gray">No Insurance</span>
+            {% endif %}
+        </div>
+
+        {% if service.hours %}
+        <div style="font-size:12px; color:var(--muted); margin-top:2px;">&#128336; {{ service.hours }}</div>
+        {% endif %}
+    </div>
     {% empty %}
-        <p>No medical services are currently available.</p>
+    <p style="grid-column:1/-1; color:var(--muted);">No medical services found.</p>
     {% endfor %}
-</ul>
+</div>
 {% endblock %}

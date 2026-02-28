@@ -3,11 +3,12 @@ from .views import (
     home_page, hospital_list, hospital_list_render,
     MedServiceBaseView, MedServiceListView, MedServiceDetailView,
     service_search, chart_image,
-    services_api, services_http_response, # for section 6
+    services_api, services_http_response,
     api_summary_location_counts, api_summary_appointments,
     vega_chart1_page, vega_chart2_page, vega_chart_hub_page,
     export_csv, export_json, reports_page, get_location,
-    signup_view, login_view, logout_view
+    signup_view, login_view, logout_view,
+    map_view, api_services_geo,
 )
 
 urlpatterns = [
@@ -46,5 +47,8 @@ urlpatterns = [
     # A5
     path("signup/", signup_view, name="signup"),
     path("login/", login_view, name="login"),
-    path("logout/", logout_view, name="logout")
+    path("logout/", logout_view, name="logout"),
+    # Demo: map
+    path("map/", map_view, name="map"),
+    path("api/services/geo/", api_services_geo, name="api-services-geo"),
 ]

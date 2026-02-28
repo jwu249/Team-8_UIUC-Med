@@ -16,6 +16,7 @@
     <nav class="nav">
       <a href="{% url 'home' %}">Home</a>
       {% if user.is_authenticated %}
+        <a href="{% url 'map' %}">Map</a>
         <a href="{% url 'service-cbv-generic' %}">Services</a>
         <a href="{% url 'service-search' %}">Search</a>
         <a href="{% url 'service-chart' %}">Chart</a>
