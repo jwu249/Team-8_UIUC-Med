@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>AI Symptom Triage</h1>
+<p>This assistant is not a diagnosis tool. It suggests a care level and nearby services.</p>
+
+<div class="triage-panel">
+  <form method="post" action="{% url 'triage' %}">
+    {% csrf_token %}
+    <label for="symptoms"><strong>Describe your symptoms</strong></label>
+    <textarea
+      id="symptoms"
+      name="symptoms"
+      rows="5"
+      maxlength="600"
+      placeholder="Example: chest feels tight, shortness of breath for one hour."
+      required
+    >{{ symptom_text }}</textarea>
+    <button type="submit">Run Triage</button>
+  </form>
+</div>
+
+{% if triage_error %}
+  <p style="color:#b91c1c;"><strong>Error:</strong> {{ triage_error }}</p>
+{% endif %}
+
+{% if triage_result %}
+  <hr>
+  <h2>Triage Result</h2>
+  <table>
+    <tr>
+      <th>Severity</th>
+      <td>{{ triage_result.severity }}</td>
+    </tr>
+    <tr>
+      <th>Classifier Source</th>
+      <td>{{ triage_result.classifier_source }}</td>
+    </tr>
+    <tr>
+      <th>Advice</th>
+      <td>{{ triage_result.care_advice }}</td>
+    </tr>
+  </table>
+
+  <h3>Recommended Services</h3>
+  <ul>
+    {% for service in triage_result.recommendations %}
+      <li>
+        <a href="{{ service.url }}"><strong>{{ service.name }}</strong></a> - {{ service.location }}
+        (Appointments required: {{ service.appointments_required|yesno:"Yes,No" }})
+      </li>
+    {% empty %}
+      <li>No services available right now.</li>
+    {% endfor %}
+  </ul>
+
+  {% if triage_result.notes %}
+    <h3>System Notes</h3>
+    <ul>
+      {% for note in triage_result.notes %}
+        <li>{{ note }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endif %}
+
+{% endblock %}

@@ -4,18 +4,17 @@
 {% if user.is_authenticated %}
 
 <h1>How are you feeling today?</h1>
-<p>Describe your symptoms and we'll help you find the right care nearby.</p>
+<p>Describe your symptoms and we will help you find the right care nearby.</p>
 
 <div style="max-width: 640px;">
   <div class="chat-window">
-    <em>AI assistant coming soon — your conversation will appear here.</em>
+    <strong>Part 2 AI triage is ready.</strong><br>
+    Use the triage page to classify severity with a local Hugging Face model.
+    If local inference fails, Gemini is used as fallback.
   </div>
-  <form class="chat-input-row">
-    <input type="text" placeholder="e.g. sore throat with runny nose..." disabled>
-    <button type="submit" disabled>Send</button>
-  </form>
+  <a class="btn" href="{% url 'triage' %}">Open AI Triage</a>
   <p style="font-size: 13px; margin-top: 8px;">
-    AI integration in progress. Browse services or use the map in the meantime.
+    API endpoint for this feature: <code>/api/triage/</code> (POST).
   </p>
 </div>
 
@@ -23,6 +22,7 @@
 
 <h2>Find Care</h2>
 <ul class="quick-links">
+  <li><a href="{% url 'triage' %}">&#129504; AI Triage</a></li>
   <li><a href="{% url 'map' %}">&#128205; Map View</a></li>
   <li><a href="{% url 'service-cbv-generic' %}">&#127973; All Services</a></li>
   <li><a href="{% url 'service-search' %}">&#128269; Search</a></li>
@@ -31,7 +31,7 @@
 {% else %}
 
 <h1>UIUC Med</h1>
-<p>A smart medical service assistant — find the right care for your symptoms, nearby.</p>
+<p>A smart medical service assistant - find the right care for your symptoms, nearby.</p>
 <p>
   <a href="{% url 'login' %}">Login</a> or <a href="{% url 'signup' %}">Sign Up</a> to get started.
 </p>

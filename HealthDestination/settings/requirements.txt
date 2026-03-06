@@ -26,3 +26,12 @@ pillow==11.3.0
 pyparsing==3.2.5
 python-dateutil==2.9.0.post0
 six==1.17.0
+requests
+transformers
+torch
+accelerate
+sentencepiece
+protobuf
+google-generativeai
+python-dotenv
+pyjwt

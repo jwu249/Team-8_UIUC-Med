@@ -18,6 +18,7 @@ import requests
 
 #importing forms
 from .forms import MedServiceForm
+from .ai_triage import SymptomInputError, triage_symptoms
 
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -38,6 +39,52 @@ def hospital_list_render(request):
 # a3 section 1: home page at "/" so root url does not 404
 def home_page(request):
     return render(request, "render/home.html")
+
+
+@login_required
+def triage_page(request):
+    context = {
+        "symptom_text": "",
+        "triage_result": None,
+        "triage_error": "",
+    }
+
+    if request.method == "POST":
+        symptom_text = request.POST.get("symptoms", "")
+        context["symptom_text"] = symptom_text
+        try:
+            context["triage_result"] = triage_symptoms(symptom_text)
+        except SymptomInputError as exc:
+            context["triage_error"] = str(exc)
+        except Exception:
+            context["triage_error"] = "Triage is temporarily unavailable. Please try again."
+
+    return render(request, "render/triage.html", context)
+
+
+@login_required
+def api_triage(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required."}, status=405)
+
+    symptom_text = ""
+
+    if request.content_type and "application/json" in request.content_type:
+        try:
+            payload = json.loads(request.body.decode("utf-8")) if request.body else {}
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+        symptom_text = payload.get("symptoms", "")
+    else:
+        symptom_text = request.POST.get("symptoms", "")
+
+    try:
+        result = triage_symptoms(symptom_text)
+        return JsonResponse(result)
+    except SymptomInputError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    except Exception:
+        return JsonResponse({"error": "Triage failed. Try again later."}, status=503)
 
 
 # 3 Base CBV (inherit from View)
