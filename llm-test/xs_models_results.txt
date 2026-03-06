@@ -1,0 +1,93 @@
+Loading: distilbert-base-uncased
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights: 100%|██████████| 100/100 [00:00<00:00, 12828.58it/s]
+DistilBertForSequenceClassification LOAD REPORT from: distilbert-base-uncased
+Key                     | Status     | 
+------------------------+------------+-
+vocab_projector.bias    | UNEXPECTED | 
+vocab_layer_norm.bias   | UNEXPECTED | 
+vocab_transform.weight  | UNEXPECTED | 
+vocab_layer_norm.weight | UNEXPECTED | 
+vocab_transform.bias    | UNEXPECTED | 
+classifier.weight       | MISSING    | 
+classifier.bias         | MISSING    | 
+pre_classifier.weight   | MISSING    | 
+pre_classifier.bias     | MISSING    | 
+
+Notes:
+- UNEXPECTED	:can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING	:those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+Failed to determine 'entailment' label id from the label2id mapping in the model config. Setting to -1. Define a descriptive label2id mapping in the model config to ensure correct outputs.
+  [0] moderate        | expected=non_emergency   | WRONG | 1.57s
+  [1] moderate        | expected=non_emergency   | WRONG | 0.07s
+  [2] urgent          | expected=non_emergency   | WRONG | 0.05s
+  [3] moderate        | expected=non_emergency   | WRONG | 0.03s
+  [4] moderate        | expected=non_emergency   | WRONG | 0.03s
+  [5] moderate        | expected=moderate        | OK | 0.35s
+  [6] moderate        | expected=moderate        | OK | 0.03s
+  [7] moderate        | expected=moderate        | OK | 0.02s
+  [8] moderate        | expected=moderate        | OK | 0.06s
+  [9] moderate        | expected=moderate        | OK | 0.05s
+  [10] moderate        | expected=urgent          | WRONG | 0.06s
+  [11] moderate        | expected=urgent          | WRONG | 0.06s
+  [12] moderate        | expected=urgent          | WRONG | 0.02s
+  [13] urgent          | expected=urgent          | OK | 0.02s
+  [14] moderate        | expected=urgent          | WRONG | 0.16s
+  [15] moderate        | expected=moderate        | OK | 0.04s
+  [16] moderate        | expected=moderate        | OK | 0.02s
+  [17] moderate        | expected=urgent          | WRONG | 0.02s
+  [18] moderate        | expected=non_emergency   | WRONG | 0.02s
+  [19] moderate        | expected=urgent          | WRONG | 0.02s
+
+Loading: facebook/bart-large-mnli
+Loading weights: 100%|██████████| 515/515 [00:00<00:00, 1663.97it/s]
+  [0] non_emergency   | expected=non_emergency   | OK | 2.96s
+  [1] moderate        | expected=non_emergency   | WRONG | 0.16s
+  [2] moderate        | expected=non_emergency   | WRONG | 0.12s
+  [3] non_emergency   | expected=non_emergency   | OK | 0.12s
+  [4] moderate        | expected=non_emergency   | WRONG | 0.12s
+  [5] urgent          | expected=moderate        | WRONG | 0.16s
+  [6] urgent          | expected=moderate        | WRONG | 0.16s
+  [7] urgent          | expected=moderate        | WRONG | 0.13s
+  [8] moderate        | expected=moderate        | OK | 0.12s
+  [9] non_emergency   | expected=moderate        | WRONG | 0.13s
+  [10] urgent          | expected=urgent          | OK | 0.13s
+  [11] urgent          | expected=urgent          | OK | 0.14s
+  [12] urgent          | expected=urgent          | OK | 0.12s
+  [13] urgent          | expected=urgent          | OK | 0.11s
+  [14] urgent          | expected=urgent          | OK | 0.13s
+  [15] non_emergency   | expected=moderate        | WRONG | 0.11s
+  [16] non_emergency   | expected=moderate        | WRONG | 0.11s
+  [17] urgent          | expected=urgent          | OK | 0.11s
+  [18] non_emergency   | expected=non_emergency   | OK | 0.11s
+  [19] urgent          | expected=urgent          | OK | 0.11s
+
+Loading: typeform/distilbert-base-uncased-mnli
+Loading weights: 100%|██████████| 104/104 [00:00<00:00, 7327.53it/s]
+  [0] moderate        | expected=non_emergency   | WRONG | 0.08s
+  [1] urgent          | expected=non_emergency   | WRONG | 0.15s
+  [2] moderate        | expected=non_emergency   | WRONG | 0.03s
+  [3] moderate        | expected=non_emergency   | WRONG | 0.03s
+  [4] urgent          | expected=non_emergency   | WRONG | 0.03s
+  [5] urgent          | expected=moderate        | WRONG | 0.04s
+  [6] urgent          | expected=moderate        | WRONG | 0.03s
+  [7] urgent          | expected=moderate        | WRONG | 0.03s
+  [8] non_emergency   | expected=moderate        | WRONG | 0.04s
+  [9] moderate        | expected=moderate        | OK | 0.03s
+  [10] moderate        | expected=urgent          | WRONG | 0.04s
+  [11] moderate        | expected=urgent          | WRONG | 0.04s
+  [12] non_emergency   | expected=urgent          | WRONG | 0.03s
+  [13] urgent          | expected=urgent          | OK | 0.03s
+  [14] non_emergency   | expected=urgent          | WRONG | 0.03s
+  [15] non_emergency   | expected=moderate        | WRONG | 0.03s
+  [16] non_emergency   | expected=moderate        | WRONG | 0.03s
+  [17] non_emergency   | expected=urgent          | WRONG | 0.03s
+  [18] non_emergency   | expected=non_emergency   | OK | 0.03s
+  [19] urgent          | expected=urgent          | OK | 0.03s
+
+Ultra-Light summary:
+                              correct  latency_s
+model                                           
+bart-large-mnli                  0.55     0.2680
+distilbert-base-uncased          0.40     0.1350
+distilbert-base-uncased-mnli     0.20     0.0405

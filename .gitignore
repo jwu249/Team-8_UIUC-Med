@@ -27,3 +27,12 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# HuggingFace model weights (DO NOT commit)
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ot
+*.gguf
+*.ggml
