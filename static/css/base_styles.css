@@ -257,6 +257,11 @@ tr:hover td { background: #f8fafc; }
 .chat-input-row { display: flex; gap: 8px; margin: 0; }
 .chat-input-row input { flex: 1; }
 
+.triage-panel textarea {
+  width: 100%;
+  min-height: 120px;
+}
+
 /* ── Quick action links ──────────────────────────────── */
 .quick-links {
   display: grid;

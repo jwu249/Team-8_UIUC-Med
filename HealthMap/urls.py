@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    home_page, hospital_list, hospital_list_render,
+    home_page, triage_page, api_triage, hospital_list, hospital_list_render,
     MedServiceBaseView, MedServiceListView, MedServiceDetailView,
     service_search, chart_image,
     services_api, services_http_response,
@@ -14,6 +14,8 @@ from .views import (
 urlpatterns = [
     # a3 section 1: home page
     path("", home_page, name="home"),
+    path("triage/", triage_page, name="triage"),
+    path("api/triage/", api_triage, name="api-triage"),
     # FBV routes
     path("hospitals/manual/", hospital_list, name="hospital-list-manual"),
     path("hospitals/render/", hospital_list_render, name="hospital-list-render"),
