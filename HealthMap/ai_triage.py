@@ -15,7 +15,19 @@ class SymptomInputError(ValueError):
 SEVERITY_LABELS = ("non_emergency", "moderate", "urgent")
 LOCAL_MODEL_ID = "facebook/bart-large-mnli"
 GEMINI_MODEL_ID = "gemini-2.0-flash-lite"
+GROQ_MODEL_ID = "meta-llama/llama-4-scout-17b-16e-instruct"
 MAX_INPUT_CHARS = 600
+
+_CHAT_SYSTEM_PROMPT = (
+    "You are a helpful medical triage assistant for UIUC Med, a student health resource finder. "
+    "Your role is to listen to users describe their symptoms, assess how urgent their situation is, "
+    "and guide them toward the right level of care (home monitoring, clinic visit, urgent care, or emergency room). "
+    "Be conversational, empathetic, and clear. Ask follow-up questions when needed to better understand symptoms. "
+    "When you identify a severity level, label it clearly as non-emergency, moderate, or urgent. "
+    "Always remind users you are not a substitute for professional medical advice. "
+    "If someone describes an emergency (chest pain, difficulty breathing, stroke symptoms, severe bleeding, etc.), "
+    "immediately tell them to call 911 or go to the nearest emergency room."
+)
 
 _LOCAL_LABEL_HINTS = {
     "non_emergency": "non_emergency - mild symptoms, stable, can monitor at home",
@@ -170,17 +182,84 @@ def recommend_services(severity: str, limit: int = 5) -> list[dict[str, Any]]:
     if not qs.exists():
         qs = MedService.objects.all()
 
-    rows = qs.order_by("name").values("id", "name", "location", "appointments_required")[:limit]
+    rows = qs.order_by("name").values(
+        "id", "name", "location", "appointments_required",
+        "google_rating", "hours", "description",
+    )[:limit]
     return [
         {
             "id": row["id"],
             "name": row["name"],
             "location": row["location"],
             "appointments_required": row["appointments_required"],
+            "google_rating": float(row["google_rating"]) if row["google_rating"] else None,
+            "hours": row["hours"],
+            "description": row["description"],
             "url": reverse("service-detail", kwargs={"pk": row["id"]}),
         }
         for row in rows
     ]
+
+
+def stream_chat_with_groq(messages: list[dict]):
+    """
+    Stream a conversation from Groq, yielding (delta, full_text, is_done) tuples.
+    The final tuple has is_done=True and delta="".
+    """
+    groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if not groq_api_key:
+        raise RuntimeError("GROQ_API_KEY is not configured.")
+
+    try:
+        from groq import Groq
+    except Exception as exc:
+        raise RuntimeError("groq is not installed. Run: pip install groq") from exc
+
+    client = Groq(api_key=groq_api_key)
+    full_messages = [{"role": "system", "content": _CHAT_SYSTEM_PROMPT}] + messages
+
+    stream = client.chat.completions.create(
+        model=GROQ_MODEL_ID,
+        messages=full_messages,
+        temperature=0.3,
+        max_tokens=600,
+        stream=True,
+    )
+
+    full_reply = ""
+    for chunk in stream:
+        delta = chunk.choices[0].delta.content or ""
+        full_reply += delta
+        yield delta, full_reply, False
+    yield "", full_reply, True
+
+
+def chat_with_groq(messages: list[dict]) -> str:
+    """
+    Send a multi-turn conversation to Groq and return the assistant's reply.
+
+    `messages` is a list of {"role": "user"|"assistant", "content": "..."} dicts
+    representing the full conversation so far (including the latest user message).
+    """
+    groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if not groq_api_key:
+        raise RuntimeError("GROQ_API_KEY is not configured.")
+
+    try:
+        from groq import Groq
+    except Exception as exc:
+        raise RuntimeError("groq is not installed. Run: pip install groq") from exc
+
+    client = Groq(api_key=groq_api_key)
+    full_messages = [{"role": "system", "content": _CHAT_SYSTEM_PROMPT}] + messages
+
+    response = client.chat.completions.create(
+        model=GROQ_MODEL_ID,
+        messages=full_messages,
+        temperature=0.3,
+        max_tokens=600,
+    )
+    return response.choices[0].message.content.strip()
 
 
 def triage_symptoms(raw_text: str) -> dict[str, Any]:

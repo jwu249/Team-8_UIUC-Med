@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from django.contrib.auth import get_user_model
 
 class MedService(models.Model):
     """
@@ -93,3 +94,36 @@ class History(models.Model):
 
     def __str__(self):
         return f"{self.user.username} @ {self.date}"
+
+
+class ChatSession(models.Model):
+    """A single AI chat conversation tied to a Django auth user."""
+    user = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="chat_sessions"
+    )
+    title = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.title or 'Chat'} @ {self.created_at}"
+
+
+class ChatMessage(models.Model):
+    """A single message within a ChatSession."""
+    ROLE_CHOICES = [("user", "User"), ("assistant", "Assistant")]
+
+    session = models.ForeignKey(
+        ChatSession, on_delete=models.CASCADE, related_name="messages"
+    )
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"[{self.role}] {self.content[:50]}"

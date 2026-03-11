@@ -9,6 +9,7 @@ from .views import (
     export_csv, export_json, reports_page, get_location,
     signup_view, login_view, logout_view,
     map_view, api_services_geo,
+    api_chat_message, api_chat_sessions, api_chat_session_messages, api_chat_stream,
 )
 
 urlpatterns = [
@@ -46,6 +47,12 @@ urlpatterns = [
 
     # A4 part 2
     path("api/location/", get_location, name="get_location"),
+
+    # Chat API
+    path("api/chat/message/", api_chat_message, name="api-chat-message"),
+    path("api/chat/stream/", api_chat_stream, name="api-chat-stream"),
+    path("api/chat/sessions/", api_chat_sessions, name="api-chat-sessions"),
+    path("api/chat/session/<int:session_id>/messages/", api_chat_session_messages, name="api-chat-session-messages"),
 
     # A5
     path("signup/", signup_view, name="signup"),

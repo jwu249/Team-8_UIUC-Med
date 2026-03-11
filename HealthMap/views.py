@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.views import View
 from django.views.generic import ListView, DetailView
 from django.db.models import Count
-from .models import MedService, User, History
+from .models import MedService, User, History, ChatSession, ChatMessage
 
 import csv
 import io
@@ -18,7 +18,10 @@ import requests
 
 #importing forms
 from .forms import MedServiceForm
-from .ai_triage import SymptomInputError, triage_symptoms
+from .ai_triage import (
+    SymptomInputError, triage_symptoms, chat_with_groq,
+    stream_chat_with_groq, extract_label, recommend_services,
+)
 
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -38,7 +41,170 @@ def hospital_list_render(request):
 
 # a3 section 1: home page at "/" so root url does not 404
 def home_page(request):
-    return render(request, "render/home.html")
+    sessions_json = "[]"
+    if request.user.is_authenticated:
+        sessions = list(
+            ChatSession.objects.filter(user=request.user)
+            .order_by("-created_at")[:30]
+            .values("id", "title", "created_at")
+        )
+        for s in sessions:
+            s["created_at"] = s["created_at"].isoformat()
+        sessions_json = json.dumps(sessions)
+    return render(request, "render/home.html", {"sessions_json": sessions_json})
+
+
+@login_required
+def api_chat_message(request):
+    """Accept a user chat message, call Groq, store & return the reply."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required."}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8")) if request.body else {}
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON."}, status=400)
+
+    user_message = payload.get("message", "").strip()
+    session_id = payload.get("session_id")
+
+    if not user_message:
+        return JsonResponse({"error": "Message is required."}, status=400)
+
+    # Get existing session or create a new one
+    if session_id:
+        try:
+            session = ChatSession.objects.get(id=session_id, user=request.user)
+        except ChatSession.DoesNotExist:
+            return JsonResponse({"error": "Session not found."}, status=404)
+    else:
+        session = ChatSession.objects.create(
+            user=request.user,
+            title=user_message[:60],
+        )
+
+    # Save user message
+    ChatMessage.objects.create(session=session, role="user", content=user_message)
+
+    # Build full conversation history for Groq
+    history = list(
+        session.messages.order_by("created_at").values("role", "content")
+    )
+    groq_messages = [{"role": m["role"], "content": m["content"]} for m in history]
+
+    try:
+        reply = chat_with_groq(groq_messages)
+    except Exception as exc:
+        reply = (
+            "I'm sorry, I'm having trouble connecting right now. "
+            f"Please try again later. ({exc})"
+        )
+
+    # Save assistant reply
+    ChatMessage.objects.create(session=session, role="assistant", content=reply)
+
+    return JsonResponse({
+        "reply": reply,
+        "session_id": session.id,
+        "session_title": session.title,
+    })
+
+
+@login_required
+def api_chat_sessions(request):
+    sessions = ChatSession.objects.filter(user=request.user).order_by("-created_at")[:30]
+    data = [
+        {
+            "id": s.id,
+            "title": s.title or "Chat",
+            "created_at": s.created_at.isoformat(),
+        }
+        for s in sessions
+    ]
+    return JsonResponse({"sessions": data})
+
+
+@login_required
+def api_chat_session_messages(request, session_id):
+    try:
+        session = ChatSession.objects.get(id=session_id, user=request.user)
+    except ChatSession.DoesNotExist:
+        return JsonResponse({"error": "Session not found."}, status=404)
+
+    msgs = list(
+        session.messages.order_by("created_at").values("role", "content", "created_at")
+    )
+    data = [
+        {
+            "role": m["role"],
+            "content": m["content"],
+            "created_at": m["created_at"].isoformat(),
+        }
+        for m in msgs
+    ]
+    return JsonResponse({"session_id": session.id, "title": session.title, "messages": data})
+
+
+@login_required
+def api_chat_stream(request):
+    """Stream a chat response via Server-Sent Events."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required."}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8")) if request.body else {}
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON."}, status=400)
+
+    user_message = payload.get("message", "").strip()
+    session_id = payload.get("session_id")
+
+    if not user_message:
+        return JsonResponse({"error": "Message is required."}, status=400)
+
+    if session_id:
+        try:
+            session = ChatSession.objects.get(id=session_id, user=request.user)
+        except ChatSession.DoesNotExist:
+            return JsonResponse({"error": "Session not found."}, status=404)
+    else:
+        session = ChatSession.objects.create(user=request.user, title=user_message[:60])
+
+    ChatMessage.objects.create(session=session, role="user", content=user_message)
+
+    history = list(session.messages.order_by("created_at").values("role", "content"))
+    groq_messages = [{"role": m["role"], "content": m["content"]} for m in history]
+
+    def event_stream():
+        full_reply = ""
+        try:
+            for delta, full_so_far, is_done in stream_chat_with_groq(groq_messages):
+                full_reply = full_so_far
+                if is_done:
+                    ChatMessage.objects.create(
+                        session=session, role="assistant", content=full_so_far
+                    )
+                    severity = extract_label(full_so_far)
+                    services = recommend_services(severity) if severity != "unknown" else []
+                    yield (
+                        f"data: {json.dumps({'done': True, 'session_id': session.id, 'session_title': session.title, 'severity': severity, 'services': services})}\n\n"
+                    )
+                else:
+                    yield f"data: {json.dumps({'delta': delta})}\n\n"
+        except Exception as exc:
+            error_msg = f"I'm sorry, I'm having trouble connecting right now. ({exc})"
+            if not full_reply:
+                ChatMessage.objects.create(
+                    session=session, role="assistant", content=error_msg
+                )
+            yield (
+                f"data: {json.dumps({'error': error_msg, 'done': True, 'session_id': session.id, 'session_title': session.title, 'severity': 'unknown', 'services': []})}\n\n"
+            )
+
+    response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"
+    return response
 
 
 @login_required
