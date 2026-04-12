@@ -46,8 +46,15 @@
   <ul>
     {% for service in triage_result.recommendations %}
       <li>
-        <a href="{{ service.url }}"><strong>{{ service.name }}</strong></a> - {{ service.location }}
-        (Appointments required: {{ service.appointments_required|yesno:"Yes,No" }})
+        <a href="{{ service.url }}"><strong>{{ service.name }}</strong></a>
+        &mdash; {{ service.location }}
+        {% if service.similarity_score %}
+          <small style="color:#6b7280;">(semantic match: {{ service.similarity_score }})</small>
+        {% endif %}
+        <br>
+        <small>Appointments required: {{ service.appointments_required|yesno:"Yes,No" }}
+        {% if service.hours %} | Hours: {{ service.hours }}{% endif %}
+        </small>
       </li>
     {% empty %}
       <li>No services available right now.</li>

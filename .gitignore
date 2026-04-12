@@ -28,7 +28,7 @@ __pycache__/
 .venv/
 venv/
 
-# HuggingFace model weights (DO NOT commit)
+# HuggingFace model weights and caches (DO NOT commit)
 *.bin
 *.safetensors
 *.pt
@@ -36,3 +36,10 @@ venv/
 *.ot
 *.gguf
 *.ggml
+
+# HuggingFace and sentence-transformers local caches
+.cache/
+huggingface/
+~/.cache/huggingface/
+sentence_transformers/
+models/

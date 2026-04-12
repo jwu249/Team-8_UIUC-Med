@@ -161,7 +161,7 @@ def classify_with_rules(symptom_text: str) -> tuple[str, str]:
     return "non_emergency", "rules:default"
 
 
-def recommend_services(severity: str, limit: int = 5) -> list[dict[str, Any]]:
+def recommend_services_by_keyword(severity: str, limit: int = 5) -> list[dict[str, Any]]:
     qs = MedService.objects.all()
 
     if severity == "urgent":
@@ -199,6 +199,33 @@ def recommend_services(severity: str, limit: int = 5) -> list[dict[str, Any]]:
         }
         for row in rows
     ]
+
+
+def recommend_services(severity: str, query: str = "", limit: int = 5) -> list[dict[str, Any]]:
+    """
+    Primary recommendation function.
+
+    Tries semantic search first (sentence-transformers, local model).
+    Falls back to keyword filtering if semantic search is unavailable or returns
+    nothing.
+
+    `query` should be the preprocessed symptom text so the embeddings can find
+    services whose descriptions best match the user's specific situation.
+    """
+    # Build a combined search query from both the symptom text and severity.
+    search_query = query or severity
+
+    if search_query:
+        try:
+            from .semantic_search import semantic_recommend_services
+            results = semantic_recommend_services(search_query, top_k=limit)
+            if results:
+                return results
+        except Exception:
+            pass  # fall through to keyword fallback
+
+    # Keyword-based fallback (always available, no ML required)
+    return recommend_services_by_keyword(severity, limit=limit)
 
 
 def stream_chat_with_groq(messages: list[dict]):
@@ -289,6 +316,6 @@ def triage_symptoms(raw_text: str) -> dict[str, Any]:
         "severity": severity,
         "classifier_source": source,
         "care_advice": care_advice,
-        "recommendations": recommend_services(severity),
+        "recommendations": recommend_services(severity, query=symptom_text),
         "notes": errors,
     }

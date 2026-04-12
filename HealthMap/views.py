@@ -22,6 +22,7 @@ from .ai_triage import (
     SymptomInputError, triage_symptoms, chat_with_groq,
     stream_chat_with_groq, extract_label, recommend_services,
 )
+from .semantic_search import semantic_recommend_services, invalidate_index
 
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -670,4 +671,85 @@ def api_services_geo(request):
         for s in qs
     ]
     return JsonResponse(data, safe=False)
-    return redirect("home")
+
+
+@login_required
+def api_semantic_search(request):
+    """
+    Semantic service search endpoint (Step 1.3 / A9 Part 1).
+
+    Uses sentence-transformers (all-MiniLM-L6-v2, local model) to find
+    services whose descriptions are semantically close to the user's query.
+
+    GET  /api/semantic-search/?q=<symptom text>&top_k=5
+    POST /api/semantic-search/  body: {"q": "...", "top_k": 5}
+
+    Returns JSON:
+        {
+            "query": "...",
+            "model": "all-MiniLM-L6-v2",
+            "results": [ { id, name, location, similarity_score, ... }, ... ]
+        }
+
+    Error cases handled:
+        - Missing / empty query  → 400
+        - Model load failure     → 503 with fallback keyword results
+        - No results found       → 200 with empty list
+    """
+    query = ""
+    top_k = 5
+
+    if request.method == "GET":
+        query = request.GET.get("q", "").strip()
+        try:
+            top_k = max(1, min(20, int(request.GET.get("top_k", 5))))
+        except (ValueError, TypeError):
+            top_k = 5
+
+    elif request.method == "POST":
+        try:
+            payload = json.loads(request.body.decode("utf-8")) if request.body else {}
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+        query = payload.get("q", "").strip()
+        try:
+            top_k = max(1, min(20, int(payload.get("top_k", 5))))
+        except (ValueError, TypeError):
+            top_k = 5
+    else:
+        return JsonResponse({"error": "GET or POST required."}, status=405)
+
+    if not query:
+        return JsonResponse({"error": "Query parameter 'q' is required."}, status=400)
+
+    if len(query) > 600:
+        query = query[:600].rstrip()
+
+    try:
+        results = semantic_recommend_services(query, top_k=top_k)
+        return JsonResponse(
+            {
+                "query": query,
+                "model": "all-MiniLM-L6-v2",
+                "result_count": len(results),
+                "results": results,
+            }
+        )
+    except RuntimeError as exc:
+        # sentence-transformers unavailable — fall back to keyword search
+        fallback = recommend_services("moderate", query=query, limit=top_k)
+        return JsonResponse(
+            {
+                "query": query,
+                "model": "keyword-fallback",
+                "warning": str(exc),
+                "result_count": len(fallback),
+                "results": fallback,
+            },
+            status=200,
+        )
+    except Exception as exc:
+        return JsonResponse(
+            {"error": f"Semantic search temporarily unavailable. ({exc})"},
+            status=503,
+        )

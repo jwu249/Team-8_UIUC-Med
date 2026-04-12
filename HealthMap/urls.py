@@ -10,6 +10,7 @@ from .views import (
     signup_view, login_view, logout_view,
     map_view, api_services_geo,
     api_chat_message, api_chat_sessions, api_chat_session_messages, api_chat_stream,
+    api_semantic_search,
 )
 
 urlpatterns = [
@@ -61,4 +62,7 @@ urlpatterns = [
     # Demo: map
     path("map/", map_view, name="map"),
     path("api/services/geo/", api_services_geo, name="api-services-geo"),
+
+    # A9: Semantic service search (sentence-transformers, local model)
+    path("api/semantic-search/", api_semantic_search, name="api-semantic-search"),
 ]
