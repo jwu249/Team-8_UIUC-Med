@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIUC Med - Signup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="base.css">
+</head>
+<body>
+    <svg style="display:none;">
+        <symbol id="icon-logo" viewBox="0 0 24 24">
+            <path class="logo-svg" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            <path fill="white" d="M11 7h2v3h3v2h-3v3h-2v-3H8v-2h3z"/>
+        </symbol>
+    </svg>
+
+    <div class="screen active center-screen">
+        <div class="logo" style="position: absolute; top: 1rem; left: 1rem;">
+            <svg><use href="#icon-logo"></use></svg> UIUC Med
+        </div>
+        <div class="card text-center">
+            <h2>Create Your Account</h2>
+            <br>
+            <div class="input-group">
+                <label>Create Username</label>
+                <input type="text" placeholder="Enter username">
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" placeholder="Enter email">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" placeholder="Enter password">
+            </div>
+            <div class="input-group">
+                <label>Re-Enter Password</label>
+                <input type="password" placeholder="Re-enter password">
+            </div>
+            <button class="btn btn-primary w-full mt-4" onclick="window.location.href='onboarding-1.html'">Create Account</button>
+        </div>
+    </div>
+</body>
+</html>
