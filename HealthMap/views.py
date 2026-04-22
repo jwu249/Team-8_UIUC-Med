@@ -143,7 +143,25 @@ def api_chat_session_messages(request, session_id):
         }
         for m in msgs
     ]
-    return JsonResponse({"session_id": session.id, "title": session.title, "messages": data})
+
+    # Restore the services sidebar by scanning the last assistant message for a severity label.
+    severity = "unknown"
+    services = []
+    last_assistant = next(
+        (m["content"] for m in reversed(msgs) if m["role"] == "assistant"), None
+    )
+    if last_assistant:
+        severity = extract_label(last_assistant)
+        if severity != "unknown":
+            services = recommend_services(severity)
+
+    return JsonResponse({
+        "session_id": session.id,
+        "title": session.title,
+        "messages": data,
+        "severity": severity,
+        "services": services,
+    })
 
 
 @login_required
@@ -595,12 +613,17 @@ def get_location(request):
                 "limit": 1
             },
             headers={
-                "User-Agent": "healthdestination-app"
+                "User-Agent": "UIUC-Med/1.0 (jasonwu267@gmail.com)",
+                "Accept-Language": "en",
             },
             timeout=5
         )
         response.raise_for_status()
-        data=response.json()
+
+        try:
+            data = response.json()
+        except ValueError:
+            return JsonResponse({"error": "Geocoding service unavailable. Try again later."}, status=503)
 
         if not data:
             return JsonResponse({"error": "Location not found"}, status=404)

@@ -135,8 +135,12 @@
         el.classList.toggle('active', parseInt(el.dataset.id) === sessionId);
       });
 
-      // Hide services sidebar when switching sessions
-      hideServices();
+      // Restore services sidebar if this session had a severity result
+      if (data.services && data.services.length > 0 && data.severity && data.severity !== 'unknown') {
+        showServices(data.services, data.severity);
+      } else {
+        hideServices();
+      }
     } catch (_) {}
   }
 
