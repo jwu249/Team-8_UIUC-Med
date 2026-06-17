@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.views import View
 from django.views.generic import ListView, DetailView
 from django.db.models import Count
-from .models import MedService, User, History
+from .models import MedService, User, History, ChatSession, ChatMessage
 
 import csv
 import io
@@ -18,6 +18,11 @@ import requests
 
 #importing forms
 from .forms import MedServiceForm
+from .ai_triage import (
+    SymptomInputError, triage_symptoms, chat_with_groq,
+    stream_chat_with_groq, extract_label, recommend_services,
+)
+from .semantic_search import semantic_recommend_services, invalidate_index
 
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -37,7 +42,234 @@ def hospital_list_render(request):
 
 # a3 section 1: home page at "/" so root url does not 404
 def home_page(request):
-    return render(request, "render/home.html")
+    sessions_json = "[]"
+    if request.user.is_authenticated:
+        sessions = list(
+            ChatSession.objects.filter(user=request.user)
+            .order_by("-created_at")[:30]
+            .values("id", "title", "created_at")
+        )
+        for s in sessions:
+            s["created_at"] = s["created_at"].isoformat()
+        sessions_json = json.dumps(sessions)
+    return render(request, "render/home.html", {"sessions_json": sessions_json})
+
+
+@login_required
+def api_chat_message(request):
+    """Accept a user chat message, call Groq, store & return the reply."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required."}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8")) if request.body else {}
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON."}, status=400)
+
+    user_message = payload.get("message", "").strip()
+    session_id = payload.get("session_id")
+
+    if not user_message:
+        return JsonResponse({"error": "Message is required."}, status=400)
+
+    # Get existing session or create a new one
+    if session_id:
+        try:
+            session = ChatSession.objects.get(id=session_id, user=request.user)
+        except ChatSession.DoesNotExist:
+            return JsonResponse({"error": "Session not found."}, status=404)
+    else:
+        session = ChatSession.objects.create(
+            user=request.user,
+            title=user_message[:60],
+        )
+
+    # Save user message
+    ChatMessage.objects.create(session=session, role="user", content=user_message)
+
+    # Build full conversation history for Groq
+    history = list(
+        session.messages.order_by("created_at").values("role", "content")
+    )
+    groq_messages = [{"role": m["role"], "content": m["content"]} for m in history]
+
+    try:
+        reply = chat_with_groq(groq_messages)
+    except Exception as exc:
+        reply = (
+            "I'm sorry, I'm having trouble connecting right now. "
+            f"Please try again later. ({exc})"
+        )
+
+    # Save assistant reply
+    ChatMessage.objects.create(session=session, role="assistant", content=reply)
+
+    return JsonResponse({
+        "reply": reply,
+        "session_id": session.id,
+        "session_title": session.title,
+    })
+
+
+@login_required
+def api_chat_sessions(request):
+    sessions = ChatSession.objects.filter(user=request.user).order_by("-created_at")[:30]
+    data = [
+        {
+            "id": s.id,
+            "title": s.title or "Chat",
+            "created_at": s.created_at.isoformat(),
+        }
+        for s in sessions
+    ]
+    return JsonResponse({"sessions": data})
+
+
+@login_required
+def api_chat_session_messages(request, session_id):
+    try:
+        session = ChatSession.objects.get(id=session_id, user=request.user)
+    except ChatSession.DoesNotExist:
+        return JsonResponse({"error": "Session not found."}, status=404)
+
+    msgs = list(
+        session.messages.order_by("created_at").values("role", "content", "created_at")
+    )
+    data = [
+        {
+            "role": m["role"],
+            "content": m["content"],
+            "created_at": m["created_at"].isoformat(),
+        }
+        for m in msgs
+    ]
+
+    # Restore the services sidebar by scanning the last assistant message for a severity label.
+    severity = "unknown"
+    services = []
+    last_assistant = next(
+        (m["content"] for m in reversed(msgs) if m["role"] == "assistant"), None
+    )
+    if last_assistant:
+        severity = extract_label(last_assistant)
+        if severity != "unknown":
+            services = recommend_services(severity)
+
+    return JsonResponse({
+        "session_id": session.id,
+        "title": session.title,
+        "messages": data,
+        "severity": severity,
+        "services": services,
+    })
+
+
+@login_required
+def api_chat_stream(request):
+    """Stream a chat response via Server-Sent Events."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required."}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8")) if request.body else {}
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON."}, status=400)
+
+    user_message = payload.get("message", "").strip()
+    session_id = payload.get("session_id")
+
+    if not user_message:
+        return JsonResponse({"error": "Message is required."}, status=400)
+
+    if session_id:
+        try:
+            session = ChatSession.objects.get(id=session_id, user=request.user)
+        except ChatSession.DoesNotExist:
+            return JsonResponse({"error": "Session not found."}, status=404)
+    else:
+        session = ChatSession.objects.create(user=request.user, title=user_message[:60])
+
+    ChatMessage.objects.create(session=session, role="user", content=user_message)
+
+    history = list(session.messages.order_by("created_at").values("role", "content"))
+    groq_messages = [{"role": m["role"], "content": m["content"]} for m in history]
+
+    def event_stream():
+        full_reply = ""
+        try:
+            for delta, full_so_far, is_done in stream_chat_with_groq(groq_messages):
+                full_reply = full_so_far
+                if is_done:
+                    ChatMessage.objects.create(
+                        session=session, role="assistant", content=full_so_far
+                    )
+                    severity = extract_label(full_so_far)
+                    services = recommend_services(severity) if severity != "unknown" else []
+                    yield (
+                        f"data: {json.dumps({'done': True, 'session_id': session.id, 'session_title': session.title, 'severity': severity, 'services': services})}\n\n"
+                    )
+                else:
+                    yield f"data: {json.dumps({'delta': delta})}\n\n"
+        except Exception as exc:
+            error_msg = f"I'm sorry, I'm having trouble connecting right now. ({exc})"
+            if not full_reply:
+                ChatMessage.objects.create(
+                    session=session, role="assistant", content=error_msg
+                )
+            yield (
+                f"data: {json.dumps({'error': error_msg, 'done': True, 'session_id': session.id, 'session_title': session.title, 'severity': 'unknown', 'services': []})}\n\n"
+            )
+
+    response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"
+    return response
+
+
+@login_required
+def triage_page(request):
+    context = {
+        "symptom_text": "",
+        "triage_result": None,
+        "triage_error": "",
+    }
+
+    if request.method == "POST":
+        symptom_text = request.POST.get("symptoms", "")
+        context["symptom_text"] = symptom_text
+        try:
+            context["triage_result"] = triage_symptoms(symptom_text)
+        except SymptomInputError as exc:
+            context["triage_error"] = str(exc)
+        except Exception:
+            context["triage_error"] = "Triage is temporarily unavailable. Please try again."
+
+    return render(request, "render/triage.html", context)
+
+
+@login_required
+def api_triage(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required."}, status=405)
+
+    symptom_text = ""
+
+    if request.content_type and "application/json" in request.content_type:
+        try:
+            payload = json.loads(request.body.decode("utf-8")) if request.body else {}
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+        symptom_text = payload.get("symptoms", "")
+    else:
+        symptom_text = request.POST.get("symptoms", "")
+
+    try:
+        result = triage_symptoms(symptom_text)
+        return JsonResponse(result)
+    except SymptomInputError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    except Exception:
+        return JsonResponse({"error": "Triage failed. Try again later."}, status=503)
 
 
 # 3 Base CBV (inherit from View)
@@ -381,12 +613,17 @@ def get_location(request):
                 "limit": 1
             },
             headers={
-                "User-Agent": "healthdestination-app"
+                "User-Agent": "UIUC-Med/1.0 (jasonwu267@gmail.com)",
+                "Accept-Language": "en",
             },
             timeout=5
         )
         response.raise_for_status()
-        data=response.json()
+
+        try:
+            data = response.json()
+        except ValueError:
+            return JsonResponse({"error": "Geocoding service unavailable. Try again later."}, status=503)
 
         if not data:
             return JsonResponse({"error": "Location not found"}, status=404)
@@ -457,4 +694,85 @@ def api_services_geo(request):
         for s in qs
     ]
     return JsonResponse(data, safe=False)
-    return redirect("home")
+
+
+@login_required
+def api_semantic_search(request):
+    """
+    Semantic service search endpoint (Step 1.3 / A9 Part 1).
+
+    Uses sentence-transformers (all-MiniLM-L6-v2, local model) to find
+    services whose descriptions are semantically close to the user's query.
+
+    GET  /api/semantic-search/?q=<symptom text>&top_k=5
+    POST /api/semantic-search/  body: {"q": "...", "top_k": 5}
+
+    Returns JSON:
+        {
+            "query": "...",
+            "model": "all-MiniLM-L6-v2",
+            "results": [ { id, name, location, similarity_score, ... }, ... ]
+        }
+
+    Error cases handled:
+        - Missing / empty query  → 400
+        - Model load failure     → 503 with fallback keyword results
+        - No results found       → 200 with empty list
+    """
+    query = ""
+    top_k = 5
+
+    if request.method == "GET":
+        query = request.GET.get("q", "").strip()
+        try:
+            top_k = max(1, min(20, int(request.GET.get("top_k", 5))))
+        except (ValueError, TypeError):
+            top_k = 5
+
+    elif request.method == "POST":
+        try:
+            payload = json.loads(request.body.decode("utf-8")) if request.body else {}
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+        query = payload.get("q", "").strip()
+        try:
+            top_k = max(1, min(20, int(payload.get("top_k", 5))))
+        except (ValueError, TypeError):
+            top_k = 5
+    else:
+        return JsonResponse({"error": "GET or POST required."}, status=405)
+
+    if not query:
+        return JsonResponse({"error": "Query parameter 'q' is required."}, status=400)
+
+    if len(query) > 600:
+        query = query[:600].rstrip()
+
+    try:
+        results = semantic_recommend_services(query, top_k=top_k)
+        return JsonResponse(
+            {
+                "query": query,
+                "model": "all-MiniLM-L6-v2",
+                "result_count": len(results),
+                "results": results,
+            }
+        )
+    except RuntimeError as exc:
+        # sentence-transformers unavailable — fall back to keyword search
+        fallback = recommend_services("moderate", query=query, limit=top_k)
+        return JsonResponse(
+            {
+                "query": query,
+                "model": "keyword-fallback",
+                "warning": str(exc),
+                "result_count": len(fallback),
+                "results": fallback,
+            },
+            status=200,
+        )
+    except Exception as exc:
+        return JsonResponse(
+            {"error": f"Semantic search temporarily unavailable. ({exc})"},
+            status=503,
+        )

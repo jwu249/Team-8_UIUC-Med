@@ -1,63 +1,475 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Nearby Medical Services</h2>
-<p>The map shows all services with location data. Click a marker to view details.</p>
-
-<!-- Leaflet CSS -->
+  <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<div id="map" style="height: 550px; width: 100%; border-radius: 8px;"></div>
+<style>
+  .wrapperMainMain{
+    display: flex;
+    flex-direction: row;
+  }
+  /* CSS Variables & Base Styles */
+:root {
+    --primary: #4F7596; /* Steel blue from buttons */
+    --primary-hover: #3e5d78;
+    --bg-color: white;
+    --card-bg: #FFFFFF;
+    --text-main: #111827;
+    --text-muted: #6B7280;
+    --border-color: #E5E7EB;
+    --input-bg: #FFFFFF;
+    --info-bg: #F0F5FA;
+    --success: #228cc5;
+}
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-  const map = L.map('map').setView([40.1020, -88.2272], 13); // default: Champaign-Urbana
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-color);
+    background: radial-gradient(circle at top right, #EBF2F9, #F4F7FA);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
 
-  // Load service markers from our internal geo API
-  fetch("{% url 'api-services-geo' %}")
-    .then(res => res.json())
-    .then(services => {
-      if (services.length === 0) {
-        document.getElementById('map').insertAdjacentHTML(
-          'afterend',
-          '<p><em>No services with location data yet. Add coordinates via the admin panel.</em></p>'
-        );
-        return;
-      }
+/* Typography & Utilities */
+h1, h2, h3 { font-weight: 600; margin-bottom: 0.5rem; }
+p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
+a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; cursor: pointer; }
+a:hover { color: var(--primary); }
+.text-center { text-align: center; }
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-1 { gap: 0.5rem; }
+.gap-2 { gap: 1rem; }
+.gap-3 { gap: 1.5rem; }
+.gap-4 { gap: 2rem; }
+.mt-4 { margin-top: 1rem; }
 
-      const bounds = [];
-      services.forEach(s => {
-        const marker = L.marker([s.lat, s.lng]).addTo(map);
-        const rating = s.rating ? `⭐ ${s.rating}/5` : 'No rating';
-        const appt = s.appointments_required ? 'Appointment required' : 'Walk-in welcome';
-        marker.bindPopup(`
-          <strong>${s.name}</strong><br>
-          ${s.location}<br>
-          ${rating} &nbsp;|&nbsp; ${appt}<br>
-          <a href="${s.url}">View details →</a>
-        `);
-        bounds.push([s.lat, s.lng]);
+/* Screen Management */
+.screen { display: none; width: 100%; height: 100vh; overflow-y: auto; }
+.screen.active { display: flex; flex-direction: column; }
+.center-screen { align-items: center; justify-content: center; padding: 2rem; }
+
+/* Components */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #1a365d;
+    padding: 1.5rem;
+    cursor: pointer;
+}
+.logo svg { width: 32px; height: 32px; }
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+.card.large { max-width: 600px; }
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+.input-group label { font-size: 0.85rem; font-weight: 500; }
+input[type="text"], input[type="password"], input[type="email"], select {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    background: var(--input-bg);
+    transition: border 0.2s;
+    width: 100%;
+}
+input:focus, select:focus { border-color: var(--primary); }
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
+.btn-outline:hover { background: #f9fafb; }
+.btn-ghost { background: transparent; color: var(--text-muted); }
+.btn-ghost:hover { color: var(--text-main); }
+.w-full { width: 100%; }
+
+/* Stepper */
+.stepper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0 auto;
+}
+.step { display: flex; align-items: center; gap: 0.5rem; font-weight: 500; }
+.step.active { color: var(--primary); }
+.step-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--border-color);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+}
+.step.active .step-num { background: var(--primary); color: white; }
+.step-line { width: 40px; height: 1px; background: var(--border-color); }
+
+/* Pill Selector (Gender/Toggle) */
+.pill-group { display: flex; gap: 0.5rem; }
+.pill-group .btn { flex: 1; border-radius: 20px; font-size: 0.85rem; padding: 0.5rem; }
+.pill-group.toggle { width: max-content; margin: 0 auto 2rem; background: #F3F4F6; border-radius: 20px; padding: 2px;}
+.pill-group.toggle .btn { border: none; background: transparent; }
+.pill-group.toggle .btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: var(--primary);}
+
+/* Info Box */
+.info-box {
+    background: var(--info-bg);
+    border: 1px solid #dce6f1;
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 0.85rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+.info-box.blue-border { border-color: var(--primary); background: #f8fbff; }
+
+/* Layout specific */
+.onboarding-layout {
+    max-width: 1000px; margin: 0 auto; padding: 2rem;
+    display: grid; grid-template-columns: 1fr 350px; gap: 2rem; width: 100%;
+}
+@media (max-width: 768px) {
+    .onboarding-layout { grid-template-columns: 1fr; }
+}
+
+.sidebar-card { background: var(--info-bg); border-radius: 12px; padding: 2rem; }
+.sidebar-card ul { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; }
+.sidebar-card li { display: flex; gap: 1rem; align-items: flex-start; }
+.sidebar-card li h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
+.sidebar-card li p { font-size: 0.8rem; }
+.icon-bullet { color: var(--primary); margin-top: 2px; }
+
+/* Home Search Screen */
+.search-bar-large {
+    width: 100%; max-width: 700px;
+    background: white; border: 1px solid var(--border-color);
+    border-radius: 12px; padding: 1rem 1.5rem;
+    display: flex; align-items: center; gap: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.search-bar-large input { border: none; background: transparent; flex: 1; font-size: 1rem; outline: none; padding: 0; }
+.pills-container { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+.pill-badge {
+    padding: 0.5rem 1rem; border: 1px solid var(--border-color);
+    border-radius: 20px; font-size: 0.85rem; cursor: pointer; background: white;
+}
+.pill-badge:hover { border-color: var(--primary); }
+
+/* Logo SVG placeholder */
+.logo-svg { fill: var(--primary); }
+
+/* =========================================
+   MAP LAYOUT SCREEN (UPDATED)
+   ========================================= */
+.screen.active.map-layout {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #f4f7fb;
+    padding: 0;
+}
+
+.sidebar-left {
+    width: 300px;
+    height: 100%;
+    border-right: 1px solid var(--border-color);
+    background: white;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+.chat-area {
+    flex: 1;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.chat-input {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem;
+    width: 100%;
+}
+
+.map-center {
+    flex: 1; /* Pushes the right sidebar to the edge */
+    height: 100%;
+    background: #e5e5e5;
+    position: relative;
+}
+
+.map-center img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sidebar-right {
+    width: 400px;
+    height: 100%;
+    border-left: 1px solid var(--border-color);
+    background: var(--bg-color);
+    padding: 1.5rem 1.5rem 2rem 1.5rem;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.clinic-card {
+    background: #F4F7FA;
+    padding: 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clinic-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+}
+
+.rating-badge {
+    background: #DCFCE7;
+    color: #166534;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* TOP NAVIGATION BAR */
+.top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    padding: 0.75rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.top-nav .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--primary);
+    cursor: pointer;
+}
+
+.top-nav .nav-logo svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--primary);
+}
+
+.top-nav .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.top-nav .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.top-nav .nav-links a:hover,
+.top-nav .nav-links a.active {
+    color: var(--primary);
+}
+
+/* Because the nav bar is fixed at the top, we need to push the main screens down slightly */
+.screen {
+    padding-top: 60px;
+}
+.map-layout {
+    padding-top: 60px !important;
+}
+</style>
+<div class="wrapperMainMain">
+  <div class="mapBox" style="margin-top:20px">
+      <h2>Nearby Medical Services</h2>
+      <p style="margin-top:10px; margin-bottom:30px">The map shows all services with location data. Click a marker to view details</p>
+      <div id="map" style="height: 550px; width: 100%; border-radius: 8px;"></div>
+  </div>
+  <div>
+    <div class="sidebar-right">
+            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Available Care</h2>
+
+            <div class="clinic-card">
+                <div class="flex justify-between items-start" style="margin-bottom: 0.5rem;">
+                    <div>
+                        <h3 style="color: var(--primary); font-size: 1rem; margin-bottom: 0.2rem;">Central City Clinic</h3>
+                        <p style="font-size: 0.8rem;">General Practitioner</p>
+                    </div>
+                    <div class="rating-badge">★ 4.9</div>
+                </div>
+                <div class="flex items-center gap-2" style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    <span>📍 0.8 miles away</span>
+                    <span class="status-dot"></span>
+                    <span style="color: var(--success); font-weight: 600;">Open Now</span>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn btn-primary w-full" style="padding: 0.5rem; font-size: 0.85rem;">Book Now</button>
+                    <button class="btn btn-outline w-full" style="padding: 0.5rem; font-size: 0.85rem; background-color:white">Details</button>
+                </div>
+            </div>
+
+            <div class="clinic-card">
+                <div class="flex justify-between items-start" style="margin-bottom: 0.5rem;">
+                    <div>
+                        <h3 style="color: var(--primary); font-size: 1rem; margin-bottom: 0.2rem;">Central City Clinic</h3>
+                        <p style="font-size: 0.8rem;">General Practitioner</p>
+                    </div>
+                    <div class="rating-badge">★ 4.9</div>
+                </div>
+                <div class="flex items-center gap-2" style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    <span>📍 0.8 miles away</span>
+                    <span class="status-dot"></span>
+                    <span style="color: var(--success); font-weight: 600;">Open Now</span>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn btn-primary w-full" style="padding: 0.5rem; font-size: 0.85rem;">Book Now</button>
+                    <button class="btn btn-outline w-full" style="padding: 0.5rem; font-size: 0.85rem; background-color:white">Details</button>
+                </div>
+            </div>
+
+             <div class="clinic-card">
+                <div class="flex justify-between items-start" style="margin-bottom: 0.5rem;">
+                    <div>
+                        <h3 style="color: var(--primary); font-size: 1rem; margin-bottom: 0.2rem;">Central City Clinic</h3>
+                        <p style="font-size: 0.8rem;">General Practitioner</p>
+                    </div>
+                    <div class="rating-badge">★ 4.9</div>
+                </div>
+                <div class="flex items-center gap-2" style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    <span>📍 0.8 miles away</span>
+                    <span class="status-dot"></span>
+                    <span style="color: var(--success); font-weight: 600;">Open Now</span>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn btn-primary w-full" style="padding: 0.5rem; font-size: 0.85rem;">Book Now</button>
+                    <button class="btn btn-outline w-full" style="padding: 0.5rem; font-size: 0.85rem; background-color:white">Details</button>
+                </div>
+            </div>
+
+        </div>
+  </div>
+</div>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([40.1020, -88.2272], 13); // default: Champaign-Urbana
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Load service markers from our internal geo API
+    fetch("{% url 'api-services-geo' %}")
+      .then(res => res.json())
+      .then(services => {
+        if (services.length === 0) {
+          document.getElementById('map').insertAdjacentHTML(
+            'afterend',
+            '<p><em>No services with location data yet. Add coordinates via the admin panel.</em></p>'
+          );
+          return;
+        }
+
+        const bounds = [];
+        services.forEach(s => {
+          const marker = L.marker([s.lat, s.lng]).addTo(map);
+          const rating = s.rating ? `⭐ ${s.rating}/5` : 'No rating';
+          const appt = s.appointments_required ? 'Appointment required' : 'Walk-in welcome';
+          marker.bindPopup(`
+            <strong>${s.name}</strong><br>
+            ${s.location}<br>
+            ${rating} &nbsp;|&nbsp; ${appt}<br>
+            <a href="${s.url}">View details →</a>
+          `);
+          bounds.push([s.lat, s.lng]);
+        });
+
+        // Zoom map to fit all markers
+        if (bounds.length > 0) {
+          map.fitBounds(bounds, { padding: [40, 40] });
+        }
       });
 
-      // Zoom map to fit all markers
-      if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [40, 40] });
-      }
-    });
-
-  // Try to show the user's own location
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => {
-      const { latitude, longitude } = pos.coords;
-      L.circleMarker([latitude, longitude], {
-        radius: 10, color: '#E84A27', fillColor: '#E84A27', fillOpacity: 0.8
-      }).addTo(map).bindPopup('Your location').openPopup();
-    });
-  }
-</script>
+    // Try to show the user's own location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        L.circleMarker([latitude, longitude], {
+          radius: 10, color: '#E84A27', fillColor: '#E84A27', fillOpacity: 0.8
+        }).addTo(map).bindPopup('Your location').openPopup();
+      });
+    }
+  </script>
 {% endblock %}

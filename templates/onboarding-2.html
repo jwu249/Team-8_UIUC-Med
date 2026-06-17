@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIUC Med - Physical Metrics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="base.css">
+</head>
+<body>
+    <svg style="display:none;">
+        <symbol id="icon-logo" viewBox="0 0 24 24">
+            <path class="logo-svg" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            <path fill="white" d="M11 7h2v3h3v2h-3v3h-2v-3H8v-2h3z"/>
+        </symbol>
+    </svg>
+
+    <div class="screen active center-screen">
+        <header class="flex items-center justify-between w-full" style="position: absolute; top: 0; left: 0; padding: 1.5rem 3rem;">
+            <div class="logo"><svg><use href="#icon-logo"></use></svg> UIUC Med</div>
+            <div class="stepper">
+                <div class="step"><div class="step-num">1</div> Identity</div>
+                <div class="step-line"></div>
+                <div class="step active"><div class="step-num">2</div> Background</div>
+                <div class="step-line"></div>
+                <div class="step"><div class="step-num">3</div> Get Started</div>
+            </div>
+            <div style="width: 120px;"></div>
+        </header>
+
+        <div class="card large text-center">
+            <h2>Tell us about yourself</h2>
+            <p style="margin-bottom: 1.5rem;">Physical metrics help our AI provide more accurate health<br>insights and identify potential risks.</p>
+
+            <div class="pill-group toggle">
+                <button class="btn active">Metric</button>
+                <button class="btn">Imperial</button>
+            </div>
+
+            <div class="flex gap-2" style="text-align: left;">
+                <div class="input-group w-full">
+                    <label>Height</label>
+                    <input type="text" placeholder="cm">
+                </div>
+                <div class="input-group w-full">
+                    <label>Weight</label>
+                    <input type="text" placeholder="kg">
+                </div>
+            </div>
+
+            <div class="input-group mt-4" style="text-align: left;">
+                <label>Race / Ethnicity</label>
+                <select>
+                    <option>Select your background</option>
+                </select>
+                <p style="font-size: 0.7rem; margin-top: 0.25rem;">This information helps us identify specific genetic health risks.</p>
+            </div>
+
+            <div class="flex justify-between items-center" style="margin-top: 2.5rem;">
+                <button class="btn btn-ghost" onclick="window.location.href='onboarding-1.html'">&larr; Back</button>
+                <button class="btn btn-primary" onclick="window.location.href='home.html'" style="width: 150px;">Next</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

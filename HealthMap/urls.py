@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    home_page, hospital_list, hospital_list_render,
+    home_page, triage_page, api_triage, hospital_list, hospital_list_render,
     MedServiceBaseView, MedServiceListView, MedServiceDetailView,
     service_search, chart_image,
     services_api, services_http_response,
@@ -9,11 +9,15 @@ from .views import (
     export_csv, export_json, reports_page, get_location,
     signup_view, login_view, logout_view,
     map_view, api_services_geo,
+    api_chat_message, api_chat_sessions, api_chat_session_messages, api_chat_stream,
+    api_semantic_search,
 )
 
 urlpatterns = [
     # a3 section 1: home page
     path("", home_page, name="home"),
+    path("triage/", triage_page, name="triage"),
+    path("api/triage/", api_triage, name="api-triage"),
     # FBV routes
     path("hospitals/manual/", hospital_list, name="hospital-list-manual"),
     path("hospitals/render/", hospital_list_render, name="hospital-list-render"),
@@ -45,6 +49,12 @@ urlpatterns = [
     # A4 part 2
     path("api/location/", get_location, name="get_location"),
 
+    # Chat API
+    path("api/chat/message/", api_chat_message, name="api-chat-message"),
+    path("api/chat/stream/", api_chat_stream, name="api-chat-stream"),
+    path("api/chat/sessions/", api_chat_sessions, name="api-chat-sessions"),
+    path("api/chat/session/<int:session_id>/messages/", api_chat_session_messages, name="api-chat-session-messages"),
+
     # A5
     path("signup/", signup_view, name="signup"),
     path("login/", login_view, name="login"),
@@ -52,4 +62,7 @@ urlpatterns = [
     # Demo: map
     path("map/", map_view, name="map"),
     path("api/services/geo/", api_services_geo, name="api-services-geo"),
+
+    # A9: Semantic service search (sentence-transformers, local model)
+    path("api/semantic-search/", api_semantic_search, name="api-semantic-search"),
 ]

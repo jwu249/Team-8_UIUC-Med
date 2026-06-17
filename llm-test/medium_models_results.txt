@@ -1,0 +1,73 @@
+
+Model: meta-llama/llama-4-scout-17b-16e-instruct (groq)
+  [0] non_emergency   | expected=non_emergency   | OK | 0.56s
+  [1] moderate        | expected=non_emergency   | WRONG | 0.44s
+  [2] non_emergency   | expected=non_emergency   | OK | 0.39s
+  [3] non_emergency   | expected=non_emergency   | OK | 0.36s
+  [4] non_emergency   | expected=non_emergency   | OK | 0.5s
+  [5] moderate        | expected=moderate        | OK | 0.43s
+  [6] moderate        | expected=moderate        | OK | 0.72s
+  [7] moderate        | expected=moderate        | OK | 0.19s
+  [8] moderate        | expected=moderate        | OK | 0.41s
+  [9] non_emergency   | expected=moderate        | WRONG | 1.11s
+  [10] urgent          | expected=urgent          | OK | 0.28s
+  [11] urgent          | expected=urgent          | OK | 0.48s
+  [12] urgent          | expected=urgent          | OK | 0.47s
+  [13] urgent          | expected=urgent          | OK | 0.43s
+  [14] urgent          | expected=urgent          | OK | 0.62s
+  [15] non_emergency   | expected=moderate        | WRONG | 0.4s
+  [16] moderate        | expected=moderate        | OK | 0.28s
+  [17] urgent          | expected=urgent          | OK | 0.62s
+  [18] non_emergency   | expected=non_emergency   | OK | 0.51s
+  [19] urgent          | expected=urgent          | OK | 0.24s
+
+Model: gemma-3-12b-it (gemini)
+  [0] non_emergency   | expected=non_emergency   | OK | 28.35s
+  [1] moderate        | expected=non_emergency   | WRONG | 26.65s
+  [2] moderate        | expected=non_emergency   | WRONG | 13.04s
+  [3] non_emergency   | expected=non_emergency   | OK | 14.03s
+  [4] non_emergency   | expected=non_emergency   | OK | 32.15s
+  [5] moderate        | expected=moderate        | OK | 9.1s
+  [6] moderate        | expected=moderate        | OK | 19.67s
+  [7] moderate        | expected=moderate        | OK | 12.71s
+  [8] moderate        | expected=moderate        | OK | 19.32s
+  [9] moderate        | expected=moderate        | OK | 106.69s
+  [10] urgent          | expected=urgent          | OK | 45.58s
+  [11] urgent          | expected=urgent          | OK | 65.64s
+  [12] urgent          | expected=urgent          | OK | 70.45s
+  [13] urgent          | expected=urgent          | OK | 45.25s
+  [14] urgent          | expected=urgent          | OK | 36.76s
+  [15] non_emergency   | expected=moderate        | WRONG | 47.7s
+  [16] moderate        | expected=moderate        | OK | 27.71s
+  [17] urgent          | expected=urgent          | OK | 120.67s
+  [18] non_emergency   | expected=non_emergency   | OK | 72.49s
+  [19] urgent          | expected=urgent          | OK | 9.33s
+
+Model: gemma-3-27b-it (gemini)
+  [0] non_emergency   | expected=non_emergency   | OK | 5.9s
+  [1] moderate        | expected=non_emergency   | WRONG | 6.05s
+  [2] non_emergency   | expected=non_emergency   | OK | 6.25s
+  [3] non_emergency   | expected=non_emergency   | OK | 6.03s
+  [4] non_emergency   | expected=non_emergency   | OK | 5.73s
+  [5] moderate        | expected=moderate        | OK | 6.36s
+  [6] moderate        | expected=moderate        | OK | 5.92s
+  [7] moderate        | expected=moderate        | OK | 5.73s
+  [8] moderate        | expected=moderate        | OK | 5.94s
+  [9] non_emergency   | expected=moderate        | WRONG | 5.94s
+  [10] urgent          | expected=urgent          | OK | 6.36s
+  [11] urgent          | expected=urgent          | OK | 5.73s
+  [12] urgent          | expected=urgent          | OK | 5.93s
+  [13] urgent          | expected=urgent          | OK | 6.05s
+  [14] urgent          | expected=urgent          | OK | 5.82s
+  [15] non_emergency   | expected=moderate        | WRONG | 6.58s
+  [16] moderate        | expected=moderate        | OK | 5.74s
+  [17] urgent          | expected=urgent          | OK | 6.35s
+  [18] non_emergency   | expected=non_emergency   | OK | 5.85s
+  [19] urgent          | expected=urgent          | OK | 5.78s
+
+Medium model summary:
+                                           correct  latency_s
+model                                                        
+gemma-3-12b-it                                0.85    41.1645
+gemma-3-27b-it                                0.85     6.0020
+meta-llama/llama-4-scout-17b-16e-instruct     0.85     0.4720

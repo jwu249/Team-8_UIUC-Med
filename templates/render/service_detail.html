@@ -60,8 +60,10 @@
     const lng = parseFloat(mapEl.dataset.lng);
     const name = mapEl.dataset.name;
     const m = L.map('detail-map').setView([lat, lng], 17);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
     }).addTo(m);
     L.marker([lat, lng]).addTo(m).bindPopup(name).openPopup();
   </script>

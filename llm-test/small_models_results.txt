@@ -1,0 +1,50 @@
+
+Model: llama-3.1-8b-instant (groq)
+  [0] non_emergency   | expected=non_emergency   | OK | 0.6s
+  [1] moderate        | expected=non_emergency   | WRONG | 0.2s
+  [2] moderate        | expected=non_emergency   | WRONG | 0.19s
+  [3] moderate        | expected=non_emergency   | WRONG | 0.42s
+  [4] non_emergency   | expected=non_emergency   | OK | 0.18s
+  [5] moderate        | expected=moderate        | OK | 0.22s
+  [6] moderate        | expected=moderate        | OK | 0.22s
+  [7] moderate        | expected=moderate        | OK | 0.23s
+  [8] moderate        | expected=moderate        | OK | 0.21s
+  [9] moderate        | expected=moderate        | OK | 0.38s
+  [10] urgent          | expected=urgent          | OK | 0.19s
+  [11] urgent          | expected=urgent          | OK | 0.18s
+  [12] urgent          | expected=urgent          | OK | 0.21s
+  [13] urgent          | expected=urgent          | OK | 0.27s
+  [14] urgent          | expected=urgent          | OK | 0.19s
+  [15] non_emergency   | expected=moderate        | WRONG | 0.27s
+  [16] moderate        | expected=moderate        | OK | 0.32s
+  [17] urgent          | expected=urgent          | OK | 0.28s
+  [18] moderate        | expected=non_emergency   | WRONG | 0.21s
+  [19] urgent          | expected=urgent          | OK | 0.19s
+
+Model: gemma-3-4b-it (gemini)
+  [0] non_emergency   | expected=non_emergency   | OK | 6.69s
+  [1] moderate        | expected=non_emergency   | WRONG | 6.03s
+  [2] moderate        | expected=non_emergency   | WRONG | 6.18s
+  [3] non_emergency   | expected=non_emergency   | OK | 6.18s
+  [4] non_emergency   | expected=non_emergency   | OK | 6.25s
+  [5] moderate        | expected=moderate        | OK | 6.17s
+  [6] moderate        | expected=moderate        | OK | 6.15s
+  [7] moderate        | expected=moderate        | OK | 6.03s
+  [8] moderate        | expected=moderate        | OK | 6.26s
+  [9] moderate        | expected=moderate        | OK | 5.89s
+  [10] urgent          | expected=urgent          | OK | 6.29s
+  [11] urgent          | expected=urgent          | OK | 5.94s
+  [12] urgent          | expected=urgent          | OK | 5.83s
+  [13] urgent          | expected=urgent          | OK | 6.35s
+  [14] urgent          | expected=urgent          | OK | 6.35s
+  [15] moderate        | expected=moderate        | OK | 6.24s
+  [16] non_emergency   | expected=moderate        | WRONG | 6.14s
+  [17] urgent          | expected=urgent          | OK | 6.38s
+  [18] non_emergency   | expected=non_emergency   | OK | 6.12s
+  [19] urgent          | expected=urgent          | OK | 6.16s
+
+Small model summary:
+                      correct  latency_s
+model                                   
+gemma-3-4b-it            0.85     6.1815
+llama-3.1-8b-instant     0.75     0.2580

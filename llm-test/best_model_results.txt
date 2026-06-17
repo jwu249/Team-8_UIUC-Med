@@ -1,0 +1,123 @@
+
+--- Strategy: zero_shot ---
+  [0] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [1] moderate        | expected=non_emergency   | WRONG | raw='moderate'
+  [2] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [3] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [4] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [5] moderate        | expected=moderate        | OK | raw='Moderate. 
+
+So, the one-word c'
+  [6] moderate        | expected=moderate        | OK | raw='Moderate. 
+
+So the answer is: '
+  [7] moderate        | expected=moderate        | OK | raw='Moderate. 
+
+So the answer is: '
+  [8] moderate        | expected=moderate        | OK | raw='Moderate. 
+
+So the response is'
+  [9] moderate        | expected=moderate        | OK | raw='moderate'
+  [10] urgent          | expected=urgent          | OK | raw='Urgent.'
+  [11] urgent          | expected=urgent          | OK | raw='Urgent. 
+
+The symptoms describ'
+  [12] urgent          | expected=urgent          | OK | raw='Urgent.'
+  [13] urgent          | expected=urgent          | OK | raw='Urgent.'
+  [14] urgent          | expected=urgent          | OK | raw='Urgent.'
+  [15] moderate        | expected=moderate        | OK | raw='Moderate.'
+  [16] moderate        | expected=moderate        | OK | raw='Moderate. 
+
+(I'll revise that '
+  [17] urgent          | expected=urgent          | OK | raw='Urgent.'
+  [18] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [19] urgent          | expected=urgent          | OK | raw='Urgent.'
+  Accuracy: 95%
+
+--- Strategy: one_shot ---
+  [0] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [1] moderate        | expected=non_emergency   | WRONG | raw='moderate'
+  [2] moderate        | expected=non_emergency   | WRONG | raw='moderate'
+  [3] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [4] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [5] moderate        | expected=moderate        | OK | raw='moderate'
+  [6] moderate        | expected=moderate        | OK | raw='moderate'
+  [7] moderate        | expected=moderate        | OK | raw='moderate'
+  [8] moderate        | expected=moderate        | OK | raw='Moderate. 
+
+So the full respon'
+  [9] moderate        | expected=moderate        | OK | raw='moderate'
+  [10] urgent          | expected=urgent          | OK | raw='urgent'
+  [11] urgent          | expected=urgent          | OK | raw='urgent'
+  [12] urgent          | expected=urgent          | OK | raw='Urgent. 
+
+To follow the format'
+  [13] urgent          | expected=urgent          | OK | raw='Urgent. 
+
+So the response is:
+'
+  [14] urgent          | expected=urgent          | OK | raw='Urgent.'
+  [15] moderate        | expected=moderate        | OK | raw='moderate'
+  [16] unknown         | expected=moderate        | WRONG | raw='To classify the medical urgenc'
+  [17] urgent          | expected=urgent          | OK | raw='Urgent. 
+
+Symptoms: My head hu'
+  [18] moderate        | expected=non_emergency   | WRONG | raw='moderate'
+  [19] urgent          | expected=urgent          | OK | raw='Urgent.'
+  Accuracy: 80%
+
+--- Strategy: few_shot ---
+  [0] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [1] moderate        | expected=non_emergency   | WRONG | raw='moderate'
+  [2] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [3] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [4] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [5] moderate        | expected=moderate        | OK | raw='moderate'
+  [6] moderate        | expected=moderate        | OK | raw='moderate'
+  [7] moderate        | expected=moderate        | OK | raw='moderate'
+  [8] moderate        | expected=moderate        | OK | raw='moderate'
+  [9] moderate        | expected=moderate        | OK | raw='moderate'
+  [10] urgent          | expected=urgent          | OK | raw='urgent'
+  [11] urgent          | expected=urgent          | OK | raw='urgent'
+  [12] urgent          | expected=urgent          | OK | raw='urgent'
+  [13] urgent          | expected=urgent          | OK | raw='urgent'
+  [14] urgent          | expected=urgent          | OK | raw='urgent'
+  [15] unknown         | expected=moderate        | WRONG | raw='## Step 1: Understand the task'
+  [16] moderate        | expected=moderate        | OK | raw='moderate
+
+Reasoning: While the'
+  [17] urgent          | expected=urgent          | OK | raw='urgent'
+  [18] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [19] urgent          | expected=urgent          | OK | raw='urgent'
+  Accuracy: 90%
+
+--- Strategy: many_shot ---
+  [0] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [1] moderate        | expected=non_emergency   | WRONG | raw='moderate'
+  [2] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [3] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [4] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [5] unknown         | expected=moderate        | WRONG | raw='## Step 1: Understand the task'
+  [6] unknown         | expected=moderate        | WRONG | raw='To classify the medical urgenc'
+  [7] moderate        | expected=moderate        | OK | raw='moderate'
+  [8] moderate        | expected=moderate        | OK | raw='moderate'
+  [9] non_emergency   | expected=moderate        | WRONG | raw='non_emergency'
+  [10] urgent          | expected=urgent          | OK | raw='urgent'
+  [11] urgent          | expected=urgent          | OK | raw='urgent'
+  [12] urgent          | expected=urgent          | OK | raw='urgent'
+  [13] urgent          | expected=urgent          | OK | raw='Urgent.'
+  [14] urgent          | expected=urgent          | OK | raw='urgent'
+  [15] unknown         | expected=moderate        | WRONG | raw='## Step 1: Understand the task'
+  [16] unknown         | expected=moderate        | WRONG | raw='To classify the medical urgenc'
+  [17] urgent          | expected=urgent          | OK | raw='urgent'
+  [18] non_emergency   | expected=non_emergency   | OK | raw='non_emergency'
+  [19] urgent          | expected=urgent          | OK | raw='Urgent.'
+  Accuracy: 70%
+
+=== Prompt Strategy Comparison ===
+          accuracy  correct_count
+strategy                         
+few_shot       90%             18
+many_shot      70%             14
+one_shot       80%             16
+zero_shot      95%             19

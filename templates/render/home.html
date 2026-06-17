@@ -3,30 +3,379 @@
 {% block content %}
 {% if user.is_authenticated %}
 
-<h1>How are you feeling today?</h1>
-<p>Describe your symptoms and we'll help you find the right care nearby.</p>
+<div class="chat-page">
 
-<div style="max-width: 640px;">
-  <div class="chat-window">
-    <em>AI assistant coming soon — your conversation will appear here.</em>
+  <!-- ── Left: session history sidebar ── -->
+  <div class="session-sidebar">
+    <button class="btn new-chat-btn" id="newChatBtn">+ New Chat</button>
+    <div class="session-list" id="sessionList">
+      <p class="no-sessions">Loading…</p>
+    </div>
   </div>
-  <form class="chat-input-row">
-    <input type="text" placeholder="e.g. sore throat with runny nose..." disabled>
-    <button type="submit" disabled>Send</button>
-  </form>
-  <p style="font-size: 13px; margin-top: 8px;">
-    AI integration in progress. Browse services or use the map in the meantime.
-  </p>
+
+  <!-- ── Center: chat ── -->
+  <div class="chat-main">
+    <div class="chat-header">
+      <div>
+        <h2 id="chatTitle">How are you feeling today?</h2>
+        <p>Describe your symptoms and I'll help you find the right care.</p>
+      </div>
+      <button class="btn show-services-btn" id="showServicesBtn" style="display:none" title="View nearby services">
+        🏥 Nearby Services
+      </button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="message assistant-msg">
+        <div class="msg-bubble">
+          Hello! I'm your UIUC Med triage assistant. Tell me how you're feeling and I'll help you figure out the right level of care.
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <form id="chatForm" class="chat-form">
+        {% csrf_token %}
+        <textarea id="chatInput" placeholder="Describe your symptoms… (Enter to send, Shift+Enter for newline)" rows="2" maxlength="600"></textarea>
+        <button type="submit" id="sendBtn">Send</button>
+      </form>
+      <p class="chat-disclaimer">
+        Not a substitute for professional medical advice. In an emergency, call 911.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Right: services sidebar (hidden until services are ready) ── -->
+  <div class="services-sidebar" id="servicesSidebar">
+    <div class="services-sidebar-header">
+      <span class="services-sidebar-title">🏥 Nearby Services</span>
+      <button class="collapse-btn" id="collapseServicesBtn" title="Collapse">✕</button>
+    </div>
+    <div class="severity-badge-wrap" id="severityBadgeWrap" style="display:none">
+      <span class="severity-badge" id="severityBadge"></span>
+    </div>
+    <div class="services-list" id="servicesList">
+      <p class="no-services-msg">Services will appear here.</p>
+    </div>
+  </div>
+
 </div>
 
-<hr>
+<!-- Marked.js for markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<script id="sessions-data" type="application/json">{{ sessions_json|safe }}</script>
 
-<h2>Find Care</h2>
-<ul class="quick-links">
-  <li><a href="{% url 'map' %}">&#128205; Map View</a></li>
-  <li><a href="{% url 'service-cbv-generic' %}">&#127973; All Services</a></li>
-  <li><a href="{% url 'service-search' %}">&#128269; Search</a></li>
-</ul>
+<script>
+  const CSRF_TOKEN = '{{ csrf_token }}';
+  let currentSessionId = null;
+  let lastServices = [];
+
+  /* ── Configure marked ── */
+  marked.use({ breaks: true, gfm: true });
+
+  /* ── Utilities ── */
+  function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso);
+    const now = new Date();
+    if (d.toDateString() === now.toDateString()) {
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    return d.toLocaleDateString();
+  }
+
+  function scrollToBottom() {
+    const el = document.getElementById('chatMessages');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  /* ── Session list ── */
+  function renderSessionList(sessions) {
+    const list = document.getElementById('sessionList');
+    if (!sessions || sessions.length === 0) {
+      list.innerHTML = '<p class="no-sessions">No past chats yet.</p>';
+      return;
+    }
+    list.innerHTML = sessions.map(s => `
+      <div class="session-item${s.id === currentSessionId ? ' active' : ''}"
+           data-id="${s.id}" onclick="loadSession(${s.id})">
+        <span class="session-title">${escHtml(s.title || 'Chat')}</span>
+        <span class="session-date">${formatDate(s.created_at)}</span>
+      </div>
+    `).join('');
+  }
+
+  async function refreshSessions() {
+    try {
+      const res = await fetch('/api/chat/sessions/');
+      const data = await res.json();
+      renderSessionList(data.sessions);
+    } catch (_) {}
+  }
+
+  /* ── Load a past session ── */
+  async function loadSession(sessionId) {
+    try {
+      const res = await fetch(`/api/chat/session/${sessionId}/messages/`);
+      const data = await res.json();
+      currentSessionId = sessionId;
+      document.getElementById('chatTitle').textContent = data.title || 'Chat';
+
+      const messagesEl = document.getElementById('chatMessages');
+      messagesEl.innerHTML = '';
+      data.messages.forEach(m => appendMessage(m.role, m.content));
+      scrollToBottom();
+
+      document.querySelectorAll('.session-item').forEach(el => {
+        el.classList.toggle('active', parseInt(el.dataset.id) === sessionId);
+      });
+
+      // Restore services sidebar if this session had a severity result
+      if (data.services && data.services.length > 0 && data.severity && data.severity !== 'unknown') {
+        showServices(data.services, data.severity);
+      } else {
+        hideServices();
+      }
+    } catch (_) {}
+  }
+
+  /* ── New chat ── */
+  function newChat() {
+    currentSessionId = null;
+    document.getElementById('chatTitle').textContent = 'How are you feeling today?';
+    document.getElementById('chatMessages').innerHTML = `
+      <div class="message assistant-msg">
+        <div class="msg-bubble">
+          Hello! I'm your UIUC Med triage assistant. Tell me how you're feeling and I'll help you figure out the right level of care.
+        </div>
+      </div>`;
+    document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'));
+    hideServices();
+    document.getElementById('chatInput').focus();
+  }
+
+  /* ── Append a finalized message (history load) ── */
+  function appendMessage(role, content) {
+    const el = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = `message ${role}-msg`;
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    if (role === 'assistant') {
+      bubble.innerHTML = marked.parse(content);
+    } else {
+      bubble.textContent = content;
+    }
+    div.appendChild(bubble);
+    el.appendChild(div);
+    scrollToBottom();
+  }
+
+  /* ── Create a streaming assistant bubble (returns the bubble element) ── */
+  function createStreamingBubble() {
+    const el = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'message assistant-msg';
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble streaming';
+    bubble.innerHTML = '<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>';
+    div.appendChild(bubble);
+    el.appendChild(div);
+    scrollToBottom();
+    return bubble;
+  }
+
+  /* ── Services sidebar ── */
+  function showServices(services, severity) {
+    lastServices = services;
+    const sidebar = document.getElementById('servicesSidebar');
+    const list = document.getElementById('servicesList');
+    const showBtn = document.getElementById('showServicesBtn');
+
+    const severityMeta = {
+      non_emergency: { label: 'Non-Emergency', cls: 'sev-non-emergency' },
+      moderate:      { label: 'Moderate',       cls: 'sev-moderate' },
+      urgent:        { label: 'Urgent',          cls: 'sev-urgent' },
+    };
+    const meta = severityMeta[severity] || { label: 'See below', cls: 'sev-unknown' };
+
+    const badgeWrap = document.getElementById('severityBadgeWrap');
+    const badge = document.getElementById('severityBadge');
+    badge.textContent = meta.label;
+    badge.className = `severity-badge ${meta.cls}`;
+    badgeWrap.style.display = '';
+
+    if (services.length === 0) {
+      list.innerHTML = '<p class="no-services-msg">No matching services found.</p>';
+    } else {
+      list.innerHTML = services.map(s => {
+        const stars = s.google_rating
+          ? `<span class="badge badge-star">★ ${s.google_rating}</span>`
+          : '';
+        const apptBadge = s.appointments_required
+          ? `<span class="badge badge-blue">Appt Required</span>`
+          : `<span class="badge badge-green">Walk-In OK</span>`;
+        const hours = s.hours
+          ? `<div class="sc-hours">🕐 ${escHtml(s.hours)}</div>`
+          : '';
+        const desc = s.description
+          ? `<div class="sc-desc">${escHtml(s.description.slice(0, 80))}${s.description.length > 80 ? '…' : ''}</div>`
+          : '';
+        return `
+          <a href="${escHtml(s.url)}" class="service-card-item" target="_blank" rel="noopener">
+            <div class="sc-visual">
+              <div class="sc-icon-wrap"><span class="sc-icon">🏥</span></div>
+            </div>
+            <div class="sc-body">
+              <div class="sc-name">${escHtml(s.name)}</div>
+              <div class="sc-location">📍 ${escHtml(s.location)}</div>
+              ${desc}
+              ${hours}
+              <div class="sc-badges">${stars}${apptBadge}</div>
+            </div>
+          </a>`;
+      }).join('');
+    }
+
+    sidebar.classList.add('open');
+    showBtn.style.display = '';
+  }
+
+  function hideServices() {
+    document.getElementById('servicesSidebar').classList.remove('open');
+    document.getElementById('showServicesBtn').style.display = 'none';
+    document.getElementById('severityBadgeWrap').style.display = 'none';
+  }
+
+  document.getElementById('collapseServicesBtn').addEventListener('click', () => {
+    document.getElementById('servicesSidebar').classList.remove('open');
+  });
+
+  document.getElementById('showServicesBtn').addEventListener('click', () => {
+    if (lastServices.length > 0) {
+      document.getElementById('servicesSidebar').classList.add('open');
+    }
+  });
+
+  /* ── Stream a message ── */
+  async function streamMessage(msg) {
+    const sendBtn = document.getElementById('sendBtn');
+    sendBtn.disabled = true;
+
+    // Append user bubble
+    appendMessage('user', msg);
+
+    // Create streaming assistant bubble
+    const bubble = createStreamingBubble();
+    let accumulated = '';
+    let gotFirstChunk = false;
+
+    try {
+      const res = await fetch('/api/chat/stream/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({ message: msg, session_id: currentSessionId }),
+      });
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split('\n');
+        sseBuffer = lines.pop(); // Keep any incomplete line
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr) continue;
+
+          let event;
+          try { event = JSON.parse(jsonStr); } catch (_) { continue; }
+
+          if (event.delta !== undefined && event.delta !== '') {
+            if (!gotFirstChunk) {
+              // Clear the typing dots on first real content
+              bubble.classList.remove('streaming');
+              bubble.innerHTML = '';
+              gotFirstChunk = true;
+            }
+            accumulated += event.delta;
+            // Render as plain text while streaming for smooth typing feel
+            bubble.textContent = accumulated;
+            scrollToBottom();
+          }
+
+          if (event.done) {
+            // Final render: switch to markdown
+            if (event.error) {
+              bubble.textContent = event.error;
+            } else {
+              bubble.innerHTML = marked.parse(accumulated || event.error || '');
+            }
+            bubble.classList.remove('streaming');
+            scrollToBottom();
+
+            // Update session state
+            currentSessionId = event.session_id;
+            document.getElementById('chatTitle').textContent = event.session_title || 'Chat';
+
+            // Show services if returned
+            if (event.services && event.services.length > 0) {
+              showServices(event.services, event.severity);
+            }
+
+            await refreshSessions();
+            document.querySelectorAll('.session-item').forEach(el => {
+              el.classList.toggle('active', parseInt(el.dataset.id) === currentSessionId);
+            });
+          }
+        }
+      }
+    } catch (err) {
+      bubble.classList.remove('streaming');
+      bubble.textContent = 'Connection error. Please check your connection and try again.';
+    }
+
+    sendBtn.disabled = false;
+    document.getElementById('chatInput').focus();
+  }
+
+  /* ── Form submit ── */
+  document.getElementById('chatForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    streamMessage(msg);
+  });
+
+  /* ── Enter to send ── */
+  document.getElementById('chatInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+    }
+  });
+
+  document.getElementById('newChatBtn').addEventListener('click', newChat);
+
+  /* ── Init ── */
+  const initialSessions = JSON.parse(
+    document.getElementById('sessions-data').textContent
+  );
+  renderSessionList(initialSessions);
+</script>
 
 {% else %}
 
